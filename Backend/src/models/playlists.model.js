@@ -59,6 +59,11 @@ const playlistSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Update totalVideos when videos array changes
+playlistSchema.pre('save', function(next) {
+  this.totalVideos = this.videos.length;
+  next();
+});
 
 const playlists = mongoose.model('playlists', playlistSchema)
 

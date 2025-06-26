@@ -1,4 +1,9 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+import apiError from '../utiles/apiError'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config();
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -71,6 +76,55 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+
+// For security reasons we encrypt the password before saving it using bcrypt. 
+// How to work with bcrypt...
+// 1. import it, use mongoose pre hook to write a fucntion that run just before creating the new user.
+// 2. if password is not modified then pass next()
+// 3. If  modified then generate a salt using bcrypt.genSalt(10) and then create a hash using password and salt using bcrypt.hash(this.password, salt)
+// 4. if some error return it to 
+
+userSchema.pre('save', async function(next){
+    // check whether the password modified or not if not then next()
+    if(!this.isModified(this.password)){
+        return next();
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(6);
+        this.password = await bcrypt.hash(this.password, salt);
+    } catch (error) {
+        console.log(error);
+        return next(new apiError(500, 'Error occured during password hashing.'));
+    }
+})
+
+// methods is an object on a schema that allows you to define custom instance methods. These methods are available on document instances (i.e., individual documents retrieved from the database).
+userSchema.methods.isPasswordCorrect = function(password){ 
+return bcrypt.compare(this.password, password); // return a boolean value
+}
+
+// Generate accessTokens and refreshToken
+userSchema.methods.genAccessToken = function(){
+    return jwt.sign({
+        _id: this._id,
+        username: this.username,
+        email: this.email
+    }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    })
+}
+
+userSchema.methods.genRefreshToken = function(){
+    return jwt.sign({
+        _id: this._id
+    }, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+    })
+}
+
+
 const user = mongoose.model('user', userSchema);
 
-export default user;''
+export default user;
+
