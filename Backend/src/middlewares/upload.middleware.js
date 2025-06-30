@@ -1,5 +1,6 @@
 import apiError from '../utiles/apiError.js'
 import storageEngine from   '../utiles/cloudinary.js'
+import multer from 'multer'
 
 const fileFilter = (req, file, cb) => {
     const allowedType = ['.jpeg', '.jpg', '.png']

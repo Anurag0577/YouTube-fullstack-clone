@@ -5,10 +5,10 @@
 3. 
 */
 
-import {v2 as cloudinary} from cloudinary;
-import {CloudinaryStorage} from 'multer-storage-cloudinary';
+import cloudinary from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import dotenv from 'dotenv'
-import apiError from './apiError';
+import apiError from './apiError.js';
 dotenv.config();
 
 cloudinary.config({

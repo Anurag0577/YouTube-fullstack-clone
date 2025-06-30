@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import apiError from '../utiles/apiError'
+import apiError from '../utiles/apiError.js'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 dotenv.config();

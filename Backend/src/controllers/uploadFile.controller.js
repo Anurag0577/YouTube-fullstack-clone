@@ -1,4 +1,4 @@
-import apiError from "../utiles/apiError"
+import apiError from "../utiles/apiError.js"
 
 const uplaodFile = async(req, res) => {
     // check for file
