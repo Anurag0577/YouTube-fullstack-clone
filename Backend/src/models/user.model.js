@@ -86,7 +86,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function(next){
     // check whether the password modified or not if not then next()
-    if(!this.isModified(this.password)){
+    if(!this.isModified('password')){
         return next();
     }
 
@@ -101,7 +101,7 @@ userSchema.pre('save', async function(next){
 
 // methods is an object on a schema that allows you to define custom instance methods. These methods are available on document instances (i.e., individual documents retrieved from the database).
 userSchema.methods.isPasswordCorrect = function(password){ 
-return bcrypt.compare(this.password, password); // return a boolean value
+return bcrypt.compare(password, this.password); // return a boolean value
 }
 
 // Generate accessTokens and refreshToken

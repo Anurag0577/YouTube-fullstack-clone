@@ -24,6 +24,7 @@ const upload = multer({
 const uploadErrorhandler = (uploadMiddleware) => {
     return (req, res, next) => {
         uploadMiddleware(req, res, (error) => {
+            console.log("inside the uploadErrorHandler")
             if(error instanceof multer.MulterError){
                     switch (error.code) {
                         case 'LIMIT_FILE_SIZE':

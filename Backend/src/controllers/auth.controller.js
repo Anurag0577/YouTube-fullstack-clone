@@ -6,14 +6,14 @@ import apiResponse from '../utiles/apiResponse.js'
 // Generate Access and Refresh Tokens
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
-        const user = await user.findById(userId);
+        const userFound = await user.findById(userId);
         
-        const accessToken = user.genAccessToken();
-        const refreshToken = user.genRefreshToken();
+        const accessToken = userFound.genAccessToken();
+        const refreshToken = userFound.genRefreshToken();
 
         // Save refresh token to database
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false }); // when you use validateBeforeSave: false then it does not matter whether the model have this field/property or not means if model dont have refreshToken then it going to create it and save the value.
+        userFound.refreshToken = refreshToken;
+        await userFound.save({ validateBeforeSave: false }); // when you use validateBeforeSave: false then it does not matter whether the model have this field/property or not means if model dont have refreshToken then it going to create it and save the value.
 
         return { accessToken, refreshToken };
     } catch (error) {
