@@ -103,4 +103,10 @@ const loginUser = asyncHandler(async(req, res, next) => {
     }))
 })
 
+const logoutUser = async(req, res, next) => {
+
+    // get user from the request
+    const userId = req.user._id;    
+}
+
 export {registerUser , loginUser};

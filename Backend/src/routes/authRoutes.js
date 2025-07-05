@@ -1,4 +1,4 @@
-import {registerUser, loginUser} from "../controllers/auth.controller.js"
+import {registerUser, loginUser, logoutUser} from "../controllers/auth.controller.js"
 import express from "express";
 import uploadMiddleware from '../middlewares/upload.middleware.js'
 const router = express.Router();

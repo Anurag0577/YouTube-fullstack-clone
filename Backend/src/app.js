@@ -14,8 +14,9 @@ app.get('/', (req, res) => {
     console.log('Welcome to the Youtube clone!')
     res.send('Welcome to the YouTube Clone.')
 })
-app.use('/file', uploadRoutes);
-app.use('/auth', authRoutes );
+app.use('/api/file', uploadRoutes);
+app.use('/api/auth', authRoutes );
+app.use('/api/users', userRoutes)
 
 
 connectDB()
