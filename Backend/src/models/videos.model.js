@@ -50,20 +50,6 @@ const videoSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'Video owner is required']
   },
-  tags: [{
-    type: String,
-    trim: true,
-    maxlength: [30, 'Tag cannot exceed 30 characters']
-  }],
-  category: {
-    type: String,
-    enum: [
-      'Gaming', 'Music', 'Entertainment', 'News', 'Sports', 
-      'Education', 'Technology', 'Comedy', 'Travel', 'Cooking',
-      'Beauty', 'Fashion', 'Health', 'Fitness', 'DIY', 'Other'
-    ],
-    default: 'Other'
-  },
   isPublished: {
     type: Boolean,
     default: false
@@ -71,24 +57,6 @@ const videoSchema = new mongoose.Schema({
   publishedAt: {
     type: Date,
     default: null
-  },
-  videoQuality: {
-    '360p': {
-      type: String,
-      default: null
-    },
-    '480p': {
-      type: String,
-      default: null
-    },
-    '720p': {
-      type: String,
-      default: null
-    },
-    '1080p': {
-      type: String,
-      default: null
-    }
   },
   comments: [{
     type: mongoose.Schema.Types.ObjectId,
