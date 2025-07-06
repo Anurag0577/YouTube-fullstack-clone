@@ -11,6 +11,7 @@ import dotenv from 'dotenv'
 import apiError from './apiError.js';
 dotenv.config();
 
+// connect my application to Cloudinary’s servers for storing and managing uploaded files.
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -24,12 +25,23 @@ const validateCloudinaryConfig = () => {
     }
 }
 
-const storageEngine = new CloudinaryStorage({
-    cloudinary: cloudinary,
+// integrate Multer with Cloudinary for storing uploaded files directly in Cloudinary instead of local storage.
+const imageStorageEngine = new CloudinaryStorage({
+    cloudinary: cloudinary, // give an instance of cloudinary
     params: {
-        folder: 'upload',
-        allowed_formate: ['.jpeg', '.png',  '.jpg']
+        folder: 'images',
+        allowed_formate: ['jpeg', 'png',  'jpg'],
+        resource_type: 'image'
     }
 })
 
-export default {storageEngine, validateCloudinaryConfig};
+const videoStorageEngine = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'videos',
+        allowed_type: ['mp4', 'avi', 'webm'],
+        resource_type: 'video'
+    }
+})
+
+export default {imageStorageEngine, videoStorageEngine, validateCloudinaryConfig};

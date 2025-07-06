@@ -1,8 +1,11 @@
 import apiError from '../utiles/apiError.js'
-import storageEngine from   '../utiles/cloudinary.js'
+import imageStorageEngine from   '../utiles/cloudinary.js'
+import videoStorageEngine from '../utiles/cloudinary.js'
 import multer from 'multer'
 
-const fileFilter = (req, file, cb) => {
+
+
+const imageFileFilter = (req, file, cb) => {
     const allowedType = ['.jpeg', '.jpg', '.png']
     if(!allowedType.includes(file.mimetype)){
         cb((new apiError(500, "File type not supported. Please upload in '.jpeg', '.jpg', or '.png' files.")), false)
@@ -11,11 +14,28 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
-const upload = multer({
-    storage: storageEngine,
-    fileFilter: fileFilter,
+const videoFileFilter = (req, file, cb) => {
+    const allowed_type = ['mp4', 'webm', 'avi'];
+    if(!allowed_type.includes(file.mimetype)){
+        cb((new apiError(500, "File type not supported please upload in 'mp4', 'avi', or in 'webm'.")). false)
+    } else{
+        cb(null, true)
+    }
+}
+
+const imageUpload = multer({
+    storage: imageStorageEngine,
+    fileFilter: imageFileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024
+    }
+})
+
+const videoUpload = multer({
+    storage: videoStorageEngine,
+    fileFilter: videoFileFilter,
+    limits: {
+        fileSize: 100 * 1024 * 1024
     }
 })
 
@@ -45,4 +65,4 @@ const uploadErrorhandler = (uploadMiddleware) => {
     }
 }
 
-export default {uploadErrorhandler, upload, fileFilter};
+export default {uploadErrorhandler, imageUpload, videoUpload, fileFilter};
