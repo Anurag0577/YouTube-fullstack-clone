@@ -2,6 +2,7 @@ import asyncHandler from '../../src/utiles/asyncHandler.js'
 import videos from '../models/videos.model.js';
 import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js';
+import cloudinary from 'cloudinary';
 
 
 // GET /api/videos/:videoId - Takes: videoId → Returns: video details + channel info | 
@@ -59,7 +60,42 @@ const updateVideoInfo = asyncHandler(async(req, res) => {
     res.status(200).json(new apiResponse(200, "Video detail updated successfully!"), updatedVideo)
 })
 
+const deleteVideo = asyncHandler(async(req, res) => {
+    const videoId = req.params.videoId;
+
+    const deletedVideo = await videos.findByIdAndDelete(videoId);
+    if(!deletedVideo){
+        throw new apiError(500, "Video not found!")
+    }
+
+    // this will delete video from the cloudinary cloud storage.
+    const deleteVideoFromCloudinary = async(publicId) => {
+        try{
+            const result = await cloudinary.uploader.destroy(publicId, {resource_type: 'video'})
+            console.log('Deletion result: ', result)
+            return result;
+        } catch(error){
+            console.error(`Error deleting video: ${error}`)
+            throw error;
+        }
+    }
+
+    deleteVideoFromCloudinary();
+})
+
+// POST /api/videos/:videoId/view - Takes: videoId → Returns: updated view count | 
+// Increments video view count
+const incrementViewCount = asyncHandler(async(req, res) => {
+    const videoId = req.params.videoId;
+    const video = await videos.findById(videoId);
+    if(!video){
+        throw new apiError(404, "Video not found!")
+    }
+    video.views += 1; // Increment view count
+    await video.save();
+
+    res.status(200).json(new apiResponse(200, "Video view count incremented successfully!", video.views));
+})
 
 
-
-export default {videoInformation, newVideo, updateVideoInfo}
+export default {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount}

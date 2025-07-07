@@ -1,6 +1,8 @@
 import express from "express";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/uploadRoutes.js"
+import videoRoutes from "./routes/videoRoutes.js"
 import cors from 'cors';
 import connectDB from "./db/index.js";
 
@@ -17,6 +19,7 @@ app.get('/', (req, res) => {
 app.use('/api/file', uploadRoutes);
 app.use('/api/auth', authRoutes );
 app.use('/api/users', userRoutes)
+app.use('/api/videos', videoRoutes)
 
 
 connectDB()
