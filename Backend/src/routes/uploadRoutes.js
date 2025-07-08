@@ -1,10 +1,11 @@
-import express from 'express';
+import express from 'express'; 
 import {uploadVideoFile, uploadImageFile} from '../controllers/uploadFile.controller.js';
-import {imageUpload, videoUpload, uploadErrorhandler} from '../middlewares/upload.middleware.js'
+import {uploadErrorhandler, singleImageUpload, videoUpload} from '../middlewares/upload.middleware.js'
 
 const router = express.Router();
 
-router.post('/upload', uploadErrorhandler(imageUpload.single('image')), uploadImageFile);
-router.post('/upload', uploadErrorhandler(videoUpload.single('image')), uploadVideoFile);
+// Use different paths to avoid route conflicts
+router.post('/upload/image', uploadErrorhandler(singleImageUpload.single('image')), uploadImageFile);
+router.post('/upload/video', uploadErrorhandler(videoUpload.single('video')), uploadVideoFile);
 
 export default router;

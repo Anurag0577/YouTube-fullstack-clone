@@ -1,33 +1,40 @@
 import apiError from '../utiles/apiError.js'
-import imageStorageEngine from   '../utiles/cloudinary.js'
+import imageStorageEngine from '../utiles/cloudinary.js'
 import videoStorageEngine from '../utiles/cloudinary.js'
 import multer from 'multer'
 
-
-
 const imageFileFilter = (req, file, cb) => {
-    const allowedType = ['.jpeg', '.jpg', '.png']
-    if(!allowedType.includes(file.mimetype)){
-        cb((new apiError(500, "File type not supported. Please upload in '.jpeg', '.jpg', or '.png' files.")), false)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if(!allowedTypes.includes(file.mimetype)){
+        cb(new apiError(400, "File type not supported. Please upload JPEG, JPG, or PNG files."), false);
     } else{
-        cb(null, true)
+        cb(null, true);
     }
 }
 
 const videoFileFilter = (req, file, cb) => {
-    const allowed_type = ['mp4', 'webm', 'avi'];
-    if(!allowed_type.includes(file.mimetype)){
-        cb((new apiError(500, "File type not supported please upload in 'mp4', 'avi', or in 'webm'.")). false)
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/avi'];
+    if(!allowedTypes.includes(file.mimetype)){
+        cb(new apiError(400, "File type not supported. Please upload MP4, AVI, or WebM files."), false);
     } else{
-        cb(null, true)
+        cb(null, true);
     }
 }
 
-const imageUpload = multer({
+// Different configurations for different use cases
+const singleImageUpload = multer({
     storage: imageStorageEngine,
     fileFilter: imageFileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024
+        fileSize: 5 * 1024 * 1024 // 5MB
+    }
+})
+
+const avatarUpload = multer({
+    storage: imageStorageEngine,
+    fileFilter: imageFileFilter,
+    limits: {
+        fileSize: 2 * 1024 * 1024 // 2MB for avatars
     }
 })
 
@@ -35,34 +42,33 @@ const videoUpload = multer({
     storage: videoStorageEngine,
     fileFilter: videoFileFilter,
     limits: {
-        fileSize: 100 * 1024 * 1024
+        fileSize: 100 * 1024 * 1024 // 100MB
     }
 })
-
-// Since this multer is a middleware not a api so we have to wright another error handler for it, I am going to wrap it in a function that catches the error if occured.
 
 const uploadErrorhandler = (uploadMiddleware) => {
     return (req, res, next) => {
         uploadMiddleware(req, res, (error) => {
             console.log("inside the uploadErrorHandler")
             if(error instanceof multer.MulterError){
-                    switch (error.code) {
-                        case 'LIMIT_FILE_SIZE':
+                switch (error.code) {
+                    case 'LIMIT_FILE_SIZE':
                         return next(new apiError(400, 'File too large. Please select a smaller file.'));
-                        case 'LIMIT_FILE_COUNT':
+                    case 'LIMIT_FILE_COUNT':
                         return next(new apiError(400, 'Too many files. Maximum allowed is 5.'));
-                        case 'LIMIT_UNEXPECTED_FILE':
+                    case 'LIMIT_UNEXPECTED_FILE':
                         return next(new apiError(400, 'Unexpected file field.'));
-                        default:
+                    default:
                         return next(new apiError(400, 'File upload failed.'));  
-                    }
                 }
-                if(error){
-                    next(error)
-                }
-                next();
+            }
+            if(error){
+                return next(error);
+            }
+            next();
         })
     }
 }
 
-export default {uploadErrorhandler, imageUpload, videoUpload, fileFilter};
+// Export all configurations
+export {uploadErrorhandler, singleImageUpload, avatarUpload, videoUpload};

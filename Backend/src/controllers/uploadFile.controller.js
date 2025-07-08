@@ -2,7 +2,7 @@ import apiError from "../utiles/apiError.js"
 import apiResponse from "../utiles/apiResponse.js"
 import asyncHandler from "../utiles/asyncHandler.js"
 
-const uplaodImageFile = asyncHandler( async(req, res) => {
+const uploadImageFile = asyncHandler( async(req, res) => {
     // check for file
     if(!req.file){
         return next(new apiError(500, "iamge upload failed!"))
@@ -26,4 +26,4 @@ const uploadVideoFile = asyncHandler(async(req, res) => {
     }))
 })
 
-export default {uploadVideoFile, uplaodImageFile};
+export {uploadVideoFile, uploadImageFile};

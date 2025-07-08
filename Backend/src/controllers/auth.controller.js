@@ -98,6 +98,11 @@ const loginUser = asyncHandler(async(req, res, next) => {
 
     res.status(200).json(new apiResponse(200, "User login successfull!", {
         username: loginUser.username,
+        email: loginUser.email,
+        firstName: loginUser.firstName,
+        lastName: loginUser.lastName,
+        avatar: loginUser.avatar,
+        userId: loginUser._id,
         refreshToken,
         accessToken
     }))
