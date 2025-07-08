@@ -1,7 +1,8 @@
-import user from "../models/user.model";
-import apiError from "../utiles/apiError";
-import apiResponse from "../utiles/apiResponse";
-import asyncHandler from "../utiles/asyncHandler";
+import user from "../models/user.model.js";
+import apiError from "../utiles/apiError.js";
+import apiResponse from "../utiles/apiResponse.js";
+import asyncHandler from "../utiles/asyncHandler.js";
+import mongoose from "mongoose";
 
 const userInformation = asyncHandler(async(req, res, next) => {
     const userId = req.params.userId;

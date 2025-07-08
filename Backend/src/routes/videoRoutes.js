@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount} from '../controllers/video.controller.js';
 const router = express.Router();
-const {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount} = require('../controllers/video.controller.js');
 
 router.get('/:videoId', videoInformation);
 router.post('/', newVideo);

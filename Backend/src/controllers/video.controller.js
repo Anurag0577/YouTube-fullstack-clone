@@ -12,7 +12,7 @@ const videoInformation = asyncHandler(async(req, res, next) => {
     
     const videoInfo = videos.findById(videoId);
     if(!videoInfo){
-        throw new apiError(500, "Invalid videoId!")
+        throw new apiError(500, "video not found!")
     }
 
     res.status(200).json(new apiResponse(200, "Video information successfully fetched!", videoInfo))
@@ -21,8 +21,9 @@ const videoInformation = asyncHandler(async(req, res, next) => {
 // POST /api/videos - Takes: video file + metadata (title, description, thumbnail) → Returns: created video object | 
 // Uploads new video to platform
 const newVideo = asyncHandler(async(req, res) => {
-    const {title, description, duration  } = req.body;
+    const {title, description } = req.body;
 
+    const duration = req.file.duration;
     const videoUrl = req.file.path; // Assuming the video file is uploaded and stored in req.file.path
     const thumbnailUrl = req.file.path; // Assuming the thumbnail is also uploaded and stored in req.file.path
 
@@ -98,4 +99,4 @@ const incrementViewCount = asyncHandler(async(req, res) => {
 })
 
 
-export default {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount}
+export {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount}
