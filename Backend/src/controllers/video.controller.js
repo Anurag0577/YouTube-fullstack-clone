@@ -23,9 +23,9 @@ const videoInformation = asyncHandler(async(req, res, next) => {
 const newVideo = asyncHandler(async(req, res) => {
     const {title, description } = req.body;
 
-    const duration = req.file.duration;
-    const videoUrl = req.file.path; // Assuming the video file is uploaded and stored in req.file.path
-    const thumbnailUrl = req.file.path; // Assuming the thumbnail is also uploaded and stored in req.file.path
+    const duration = req.file && req.file.duration !== undefined ? req.file.duration : 0;
+    const videoUrl = req.file && req.file.path ? req.file.path : '';
+    const thumbnailUrl = req.file && req.file.path ? req.file.path : '';
 
 
     const newVideoInfo = new videos({
@@ -33,7 +33,6 @@ const newVideo = asyncHandler(async(req, res) => {
         description,
         videoUrl,
         thumbnailUrl,
-        duration,
         channel: req.user.channel, // Assuming req.user contains the authenticated user's info
         owner: req.user._id, // Assuming req.user contains the authenticated user's info
         isPublished: false, // Default to false until published
