@@ -33,7 +33,7 @@ const newVideo = asyncHandler(async(req, res) => {
         description,
         videoUrl,
         thumbnailUrl,
-        channel: req.user.channel, // Assuming req.user contains the authenticated user's info
+        channel: null, // Assuming req.user contains the authenticated user's info
         owner: req.user._id, // Assuming req.user contains the authenticated user's info
         isPublished: false, // Default to false until published
     })

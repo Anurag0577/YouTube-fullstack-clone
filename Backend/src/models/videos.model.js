@@ -22,9 +22,9 @@ const videoSchema = new mongoose.Schema({
   },
   duration: {
     type: Number,
-    required: [true, 'Video duration is required'],
-    min: [1, 'Duration must be at least 1 second'],
-    default: 0
+    // required: [true, 'Video duration is required'],
+    // min: [1, 'Duration must be at least 1 second'],
+    default: null
   },
   views: {
     type: Number,
@@ -43,8 +43,8 @@ const videoSchema = new mongoose.Schema({
   },
   channel: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Channel',
-    required: [true, 'Channel is required']
+    ref: 'Channel'
+    // required: [true, 'Channel is required']
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

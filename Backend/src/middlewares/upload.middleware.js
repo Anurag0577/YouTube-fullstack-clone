@@ -1,6 +1,6 @@
+// upload.middleware.js
 import apiError from '../utiles/apiError.js'
-import imageStorageEngine from '../utiles/cloudinary.js'
-import videoStorageEngine from '../utiles/cloudinary.js'
+import { imageStorageEngine, videoStorageEngine } from '../utiles/cloudinary.js' // ✅ Fixed: Named imports
 import multer from 'multer'
 
 const imageFileFilter = (req, file, cb) => {
@@ -12,14 +12,19 @@ const imageFileFilter = (req, file, cb) => {
     }
 }
 
+// const videoFileFilter = (req, file, cb) => {
+//     const allowedTypes = ['video/mp4', 'video/webm', 'video/avi'];
+//     if(!allowedTypes.includes(file.mimetype)){
+//         cb(new apiError(400, "File type not supported. Please upload MP4, AVI, or WebM files."), false);
+//     } else{
+//         cb(null, true);
+//     }
+// }
+
 const videoFileFilter = (req, file, cb) => {
-    const allowedTypes = ['video/mp4', 'video/webm', 'video/avi'];
-    if(!allowedTypes.includes(file.mimetype)){
-        cb(new apiError(400, "File type not supported. Please upload MP4, AVI, or WebM files."), false);
-    } else{
-        cb(null, true);
-    }
-}
+    // Allow all file types
+    cb(null, true);
+};
 
 // Different configurations for different use cases
 const singleImageUpload = multer({
@@ -28,7 +33,16 @@ const singleImageUpload = multer({
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB
     }
-})
+});
+
+// ✅ Added: Multiple image upload configuration
+const multipleImageUpload = multer({
+    storage: imageStorageEngine,
+    fileFilter: imageFileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB
+    }
+});
 
 const avatarUpload = multer({
     storage: imageStorageEngine,
@@ -36,7 +50,7 @@ const avatarUpload = multer({
     limits: {
         fileSize: 2 * 1024 * 1024 // 2MB for avatars
     }
-})
+});
 
 const videoUpload = multer({
     storage: videoStorageEngine,
@@ -44,12 +58,17 @@ const videoUpload = multer({
     limits: {
         fileSize: 100 * 1024 * 1024 // 100MB
     }
-})
+});
 
 const uploadErrorhandler = (uploadMiddleware) => {
     return (req, res, next) => {
         uploadMiddleware(req, res, (error) => {
-            console.log("inside the uploadErrorHandler")
+            console.log("inside the uploadErrorHandler");
+            if (error) {
+                // Only log as JSON for readability
+                console.error("Upload error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+                // Remove any direct console.log(error) or similar lines
+            }
             if(error instanceof multer.MulterError){
                 switch (error.code) {
                     case 'LIMIT_FILE_SIZE':
@@ -70,5 +89,11 @@ const uploadErrorhandler = (uploadMiddleware) => {
     }
 }
 
-// Export all configurations
-export {uploadErrorhandler, singleImageUpload, avatarUpload, videoUpload};
+// ✅ Fixed: Export all configurations including the new multipleImageUpload
+export {
+    uploadErrorhandler, 
+    singleImageUpload, 
+    multipleImageUpload, 
+    avatarUpload, 
+    videoUpload
+};

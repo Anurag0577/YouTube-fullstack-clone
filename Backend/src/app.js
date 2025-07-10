@@ -5,6 +5,7 @@ import userRoutes from "./routes/userRoutes.js"
 import videoRoutes from "./routes/videoRoutes.js"
 import cors from 'cors';
 import connectDB from "./db/index.js";
+import errorHandler from "./middlewares/errorHandler.js";
 
 const app = express();
 const PORT = 3000;
@@ -22,8 +23,12 @@ app.get('/', (req, res) => {
 })
 app.use('/api/file', uploadRoutes);
 app.use('/api/auth', authRoutes );
-app.use('/api/users', userRoutes)
-app.use('/api/videos', videoRoutes)
+app.use('/api/users', userRoutes);
+app.use('/api/videos', videoRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Move error handler to the end
+app.use(errorHandler)
 
 
 connectDB()
