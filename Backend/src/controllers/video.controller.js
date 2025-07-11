@@ -10,7 +10,7 @@ import cloudinary from 'cloudinary';
 const videoInformation = asyncHandler(async(req, res, next) => {
     const videoId = req.params.videoId;
     
-    const videoInfo = videos.findById(videoId);
+    const videoInfo = await videos.findById(videoId);
     if(!videoInfo){
         throw new apiError(500, "video not found!")
     }
@@ -48,7 +48,7 @@ const newVideo = asyncHandler(async(req, res) => {
 const updateVideoInfo = asyncHandler(async(req, res) => {
     const videoId = req.params.videoId;
     const {title, description, thumbnailUrl} = req.body;
-    if(!title || !description || !thumbnailUrl){
+    if(!title || !description){
         throw new apiError(400, "Title/description/thumbnailUrl is missing!")
     }
     const updatedVideo = await videos.findByIdAndUpdate(videoId, {title, description, thumbnailUrl})
@@ -91,10 +91,15 @@ const incrementViewCount = asyncHandler(async(req, res) => {
     if(!video){
         throw new apiError(404, "Video not found!")
     }
-    video.views += 1; // Increment view count
-    await video.save();
+    const updatedVideo = await videos.findByIdAndUpdate(
+        videoId,
+        {
+            $inc: { views : 1}
+        },
+        { new: true }
+    );
 
-    res.status(200).json(new apiResponse(200, "Video view count incremented successfully!", video.views));
+    res.status(200).json(new apiResponse(200, "Video view count incremented successfully!", updatedVideo.views));
 })
 
 
