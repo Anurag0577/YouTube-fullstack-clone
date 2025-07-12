@@ -12,3 +12,4 @@ router.post('/:videoId/increaseDislike', increaseDislikes );
 router.post('/:videoId/decreaseLike', decreaseLikes );
 router.post('/:videoId/decreaseDislike', decreaseDislikes );
 
+export default router;
