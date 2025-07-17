@@ -44,10 +44,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
   watchHistory: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Video'
@@ -64,6 +60,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Video'
   }],
+  channel: {
+    type:mongoose.Types.ObjectId,
+    ref: 'Channel'
+  },
   subscribedChannels: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Channel'

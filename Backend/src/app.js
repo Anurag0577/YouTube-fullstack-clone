@@ -6,6 +6,8 @@ import videoRoutes from "./routes/videoRoutes.js"
 import cors from 'cors';
 import connectDB from "./db/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import engagementRoutes from './routes/engagementRoutes.js'
+import commentRoutes from './routes/commentRoutes.js'
 
 const app = express();
 const PORT = 3000;
@@ -26,7 +28,9 @@ app.use('/api/auth', authRoutes );
 app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/upload', uploadRoutes);
-
+app.use('/api/engagement', engagementRoutes)
+app.use('/api/comments', commentRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 // Move error handler to the end
 app.use(errorHandler)
 

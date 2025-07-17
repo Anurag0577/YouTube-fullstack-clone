@@ -3,7 +3,7 @@ import {
     increaseDislikes,
     decreaseLikes,
     decreaseDislikes
-} from '../controllers/engagement.controller';
+} from '../controllers/engagement.controller.js';
 import express from 'express';
 const router = express.Router();
 

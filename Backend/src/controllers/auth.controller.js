@@ -114,4 +114,4 @@ const logoutUser = async(req, res, next) => {
     const userId = req.user._id;    
 }
 
-export {registerUser , loginUser};
+export {registerUser , loginUser, logoutUser};
