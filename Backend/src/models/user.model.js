@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Last name cannot exceed 50 characters']
   },
-  avatar: {
+  avatar: { /// this is also be going to profile image for the channel
     type: String,
     default: null
   },

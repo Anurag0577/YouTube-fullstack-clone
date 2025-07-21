@@ -23,7 +23,8 @@ const channelSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  banner: {
+  cover: {
+    // we have to make a image uploader for this cover image
     type: String,
     default: null
   },
