@@ -1,3 +1,5 @@
+// This module is useless for now because I did not add a feature of playlists in my YouTube Clone Project. May be I'll use it in future.
+
 import mongoose from "mongoose";
 
 const playlistSchema = new mongoose.Schema({

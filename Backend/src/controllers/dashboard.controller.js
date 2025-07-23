@@ -9,20 +9,15 @@ import apiResponse from "../utiles/apiResponse.js"
 const getChannelVideos = asyncHandler(async(req, res) => {
     const userId = req.user._id;
     const userVideos = await videos.find({ owner: userId });
-    if (!userVideos) {
+    if (!userVideos || userVideos.length === 0) {
         throw new apiError(404, "No videos found for this user!");
     }
-    res.status(200).json({
-        success: true,
-        count: userVideos.length,
-        videos: userVideos
-    });
     res.status(200).json(new apiResponse(200, "channel videos fetched successfull!", userVideos))
 })
 
 const getChannelDetail = asyncHandler(async(req, res) => {
     const userId =  req.user._id;
-    const userInfo = user.findById(userId);
+    const userInfo = await user.findById(userId);
     if(!userInfo){
         throw new apiError(400, "User not found.")
     }
@@ -32,26 +27,32 @@ const getChannelDetail = asyncHandler(async(req, res) => {
     if(!channelInfo){
         throw new apiError(400, "Channel does not found!")
     }
-    res.send(200).json(new apiResponse(200, "Channel detailed fetched successfully!", channelInfo))
+    res.status(200).json(new apiResponse(200, "Channel detailed fetched successfully!", channelInfo))
 })
 
 const editChannelDetail = asyncHandler(async(req, res) => {
     const userId  = req.user._id; // get id from the middleware
-    const {channelName, description, avatar, banner} = req.body;
     const userInfo = await user.findById(userId);
     if(!userInfo){
         throw new apiError(400, "User not find!")
     }
+    const {channelName, description} = req.body;
+    const avatar = req.files && req.files.channelAvatar ? req.files.channelAvatar.path : undefined;
+    const banner = req.files && req.files.channelBanner ? req.files.channelBanner.path : undefined;
 
     const channelId = userInfo.channel;
-    const updatedChannelInfo = await channel.findByIdAndUpdate(channelId, {
-        channelName,
-        description,
-        avatar,
-        banner
-    })
+    if(!channelId){
+        throw new apiError(400, "Channel Id not found!")
+    }
 
-    res.send(200).json(new apiResponse(200, "Channel detail updated successfully!", updatedChannelInfo))
+    const updatePlayload = {channelName, description};
+    avatar ? updatePlayload.avatar = avatar : undefined;
+    banner ? updatePlayload.banner = banner : undefined;
+
+
+    const updatedChannelInfo = await channel.findByIdAndUpdate(channelId, updatePlayload , { new : true })
+
+    res.status(200).json(new apiResponse(200, "Channel detail updated successfully!", updatedChannelInfo))
 })
 
 export {getChannelVideos, getChannelDetail, editChannelDetail}

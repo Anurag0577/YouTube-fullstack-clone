@@ -26,12 +26,11 @@ const validateCloudinaryConfig = () => {
 // Validate config on startup
 validateCloudinaryConfig();
 
-// ✅ Fixed: Correct property names
 const imageStorageEngine = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'images',
-        allowed_formats: ['jpeg', 'png', 'jpg'], // ✅ Fixed: was 'allowed_formate'
+        allowed_formats: ['jpeg', 'png', 'jpg'], 
         resource_type: 'image'
     }
 });
@@ -40,12 +39,12 @@ const videoStorageEngine = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'videos',
-        allowed_formats: ['mp4', 'avi', 'webm'], // ✅ Fixed: was 'allowed_type'
+        allowed_formats: ['mp4', 'avi', 'webm'], 
         resource_type: 'video'
     }
 });
 
-// ✅ Fixed: Named exports instead of default export with object
+
 export { 
     cloudinary, 
     imageStorageEngine, 

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const channelSchema = new mongoose.Schema({
-  channelName: {
+  channelName: { // same as usernamer default, but you can change it.
     type: String,
     required: [true, 'Channel name is required'],
     unique: true,
@@ -9,7 +9,7 @@ const channelSchema = new mongoose.Schema({
     minlength: [3, 'Channel name must be at least 3 characters'],
     maxlength: [50, 'Channel name cannot exceed 50 characters']
   },
-  owner: {
+  owner: { // userId
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Channel owner is required']
@@ -38,15 +38,10 @@ const channelSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
   socialLinks: {
     website: {
       type: String,
-      default: null,
-      match: [/^https?:\/\/.+/, 'Please enter a valid URL']
+      default: null
     },
     twitter: {
       type: String,
@@ -59,23 +54,6 @@ const channelSchema = new mongoose.Schema({
     facebook: {
       type: String,
       default: null
-    }
-  },
-  channelStats: {
-    totalVideos: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    totalSubscribers: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    totalViews: {
-      type: Number,
-      default: 0,
-      min: 0
     }
   }
 }, {
