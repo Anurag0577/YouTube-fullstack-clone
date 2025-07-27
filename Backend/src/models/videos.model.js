@@ -63,20 +63,6 @@ const videoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment'
   }],
-  engagement: {
-    likedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }],
-    dislikedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }],
-    savedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }]
-  }
 }, {
   timestamps: true
 });

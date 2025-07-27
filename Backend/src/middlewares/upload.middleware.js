@@ -22,7 +22,11 @@ const imageFileFilter = (req, file, cb) => {
 // }
 
 const videoFileFilter = (req, file, cb) => {
-    // Allow all file types
+    const allowVideoFormats = ['video/mp4'];
+    if (!allowVideoFormats.includes(file.mimetype)) {
+        cb(new apiError(400, "File type not supported. Please upload MP4 files."), false);
+        return;
+    }
     cb(null, true);
 };
 
@@ -31,7 +35,7 @@ const singleImageUpload = multer({
     storage: imageStorageEngine,
     fileFilter: imageFileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB
+        fileSize: 100 * 1024 * 1024 // 100MB
     }
 });
 

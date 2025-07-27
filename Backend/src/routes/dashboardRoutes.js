@@ -1,6 +1,6 @@
 import express from 'express';
-import authenticateUser from '../middlewares/authenticateUser.middleware';
-import { editChannelDetail, getChannelDetail, getChannelVideos } from '../controllers/dashboard.controller';
+import authenticateUser from '../middlewares/authenticateUser.middleware.js';
+import { editChannelDetail, getChannelDetail, getChannelVideos } from '../controllers/dashboard.controller.js';
 
 const router = express.Router();
 
@@ -17,3 +17,6 @@ router.get('/videos', authenticateUser, getChannelVideos);
 // **PUT /api/dashboard/channel** - Takes: channel updates (banner, description, etc.) → Returns: updated channel
 // *Updates channel branding and info*
 router.put('/channel', authenticateUser, editChannelDetail);
+
+
+export default router;

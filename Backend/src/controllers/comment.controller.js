@@ -1,8 +1,10 @@
 import videos from "../models/videos.model.js";
 import asyncHandler from "../utiles/asyncHandler.js";
 import apiError from "../utiles/apiError.js"
-import comment from "../models/comment.model";
+import comment from "../models/comment.model.js";
 import mongoose from "mongoose";
+import apiResponse66 from "../utiles/apiResponse.js";
+import apiResponse from "../utiles/apiResponse.js";
 
 // GET /api/videos/:videoId/comments** - Takes: videoId + pagination → Returns: paginated comments list 
 // *Gets comments for video player page*
@@ -14,6 +16,12 @@ const getVideoComment = asyncHandler(async(req, res) => {
         throw new error(400, "Video not found!")
     }
 
+    const comment = await comment.find({ video : videoId})
+    if(comment.length < 1){
+        res.status(200).json(new apiResponse(200, "There is no comment in this video!", {
+            message: "There is no comment in this video!"
+        }))
+    }
     res.send(200).json(new apiResponse(200, "Video information get successfully!", video.comments))
 })
 
@@ -40,7 +48,7 @@ const addNewComment = asyncHandler(async(req, res) => {
         throw new apiError(400, "video not found.");
     }
     video.comments.push(savedComment._id)
-    await videos.save();
+    await video.save();
 
     res.status(200).json(new apiResponse(200, "Comment successfully registered!", videoComment))
 

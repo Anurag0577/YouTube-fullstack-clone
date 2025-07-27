@@ -8,6 +8,7 @@ import connectDB from "./db/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import engagementRoutes from './routes/engagementRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js'
 
 const app = express();
 const PORT = 3000;
