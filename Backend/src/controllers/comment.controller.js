@@ -5,6 +5,7 @@ import comment from "../models/comment.model.js";
 import mongoose from "mongoose";
 import apiResponse66 from "../utiles/apiResponse.js";
 import apiResponse from "../utiles/apiResponse.js";
+import user from "../models/user.model.js";
 
 // GET /api/videos/:videoId/comments** - Takes: videoId + pagination → Returns: paginated comments list 
 // *Gets comments for video player page*
@@ -34,6 +35,16 @@ const addNewComment = asyncHandler(async(req, res) => {
 
     if(!videoId || !videoComment || !authorId){
         throw new apiError(400, "video/comment/author missing!")
+    }
+
+    const userInfo = await user.findById(authorId);
+    if(!userInfo){
+        throw new apiError('404', 'User not found!')
+    }
+    if(!userInfo.channel){
+        return new apiResponse(200, "There is no channel. You have to create one!", {
+            needChannel: true
+        })
     }
 
     const newComment = new comment({

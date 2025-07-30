@@ -37,24 +37,6 @@ const channelSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
-  },
-  socialLinks: {
-    website: {
-      type: String,
-      default: null
-    },
-    twitter: {
-      type: String,
-      default: null
-    },
-    instagram: {
-      type: String,
-      default: null
-    },
-    facebook: {
-      type: String,
-      default: null
-    }
   }
 }, {
   timestamps: true

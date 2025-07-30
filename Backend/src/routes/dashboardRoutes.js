@@ -16,7 +16,10 @@ router.get('/videos', authenticateUser, getChannelVideos);
 
 // **PUT /api/dashboard/channel** - Takes: channel updates (banner, description, etc.) → Returns: updated channel
 // *Updates channel branding and info*
-router.put('/channel', authenticateUser, editChannelDetail);
+router.put('/channel', authenticateUser, upload.fields([
+    {name: 'channelAvatar', maxCount: 1 },
+    {name: 'channelBanner', maxCount:  1}
+]) ,editChannelDetail);
 
 
 export default router;

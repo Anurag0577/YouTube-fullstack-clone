@@ -5,6 +5,26 @@ import user from "../models/user.model.js";
 import channel from "../models/channels.model.js";
 import apiResponse from "../utiles/apiResponse.js"
 
+const createChannel = asyncHandler(async(req, res) => {
+    const owner = req.user._id;
+    const userInfo = await user.findById(owner);
+    if(!userInfo){
+        throw new apiError('404', "User not found!")
+    }
+    const {channelName, description} = req.body;
+    const bannerImage = req.files && req.files.channelBanner ? req.files.channelBanner[0].path : undefined;
+    const avatarImage = req.files && req.files.channelAvatar ? req.files.channelAvatar[0].path : userInfo.avatar;
+
+    const channelInfo = await channel.create({
+        channelName,
+        description,
+        owner,
+        banner: bannerImage,
+        avatar: avatarImage
+    })
+
+    res.status(200).json( new apiResponse(200, "Create channel successfully!", channelInfo))
+})
 
 const getChannelVideos = asyncHandler(async(req, res) => {
     const userId = req.user._id;
@@ -37,8 +57,8 @@ const editChannelDetail = asyncHandler(async(req, res) => {
         throw new apiError(400, "User not find!")
     }
     const {channelName, description} = req.body;
-    const avatar = req.files && req.files.channelAvatar ? req.files.channelAvatar.path : undefined;
-    const banner = req.files && req.files.channelBanner ? req.files.channelBanner.path : undefined;
+    const avatar = req.files && req.files.channelAvatar[0] ? req.files.channelAvatar[0].path : undefined;
+    const banner = req.files && req.files.channelBanner[0] ? req.files.channelBanner[0].path : undefined;
 
     const channelId = userInfo.channel;
     if(!channelId){
