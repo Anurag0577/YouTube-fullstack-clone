@@ -1,6 +1,7 @@
 import express from 'express';
 import authenticateUser from '../middlewares/authenticateUser.middleware.js';
 import { editChannelDetail, getChannelDetail, getChannelVideos } from '../controllers/dashboard.controller.js';
+import { uploadErrorhandler, multipleImageUpload } from '../middlewares/upload.middleware.js';
 
 const router = express.Router();
 
@@ -16,10 +17,10 @@ router.get('/videos', authenticateUser, getChannelVideos);
 
 // **PUT /api/dashboard/channel** - Takes: channel updates (banner, description, etc.) → Returns: updated channel
 // *Updates channel branding and info*
-router.put('/channel', authenticateUser, upload.fields([
+router.put('/channel', authenticateUser, uploadErrorhandler(multipleImageUpload.fields([
     {name: 'channelAvatar', maxCount: 1 },
     {name: 'channelBanner', maxCount:  1}
-]) ,editChannelDetail);
+])) ,editChannelDetail);
 
 
 export default router;

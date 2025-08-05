@@ -9,6 +9,11 @@ import errorHandler from "./middlewares/errorHandler.js";
 import engagementRoutes from './routes/engagementRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
@@ -19,6 +24,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json())
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/', (req, res) => {
     console.log('Welcome to the Youtube clone!')

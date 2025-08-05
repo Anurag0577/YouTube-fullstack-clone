@@ -43,9 +43,9 @@ if (!fs.existsSync(videosDir)) {
 }
 
 const imageFileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if(!allowedTypes.includes(file.mimetype)){
-        cb(new apiError(400, "File type not supported. Please upload JPEG, JPG, or PNG files."), false);
+        cb(new apiError(400, "File type not supported. Please upload JPEG, JPG, PNG, or GIF files."), false);
     } else{
         cb(null, true);
     }
@@ -95,6 +95,9 @@ const avatarUpload = multer({
     }
 });
 
+console.log('Avatar upload storage:', isCloudinaryConfigured ? 'Cloudinary' : 'Local');
+console.log('Local storage directory:', uploadsDir);
+
 const videoUpload = multer({
     storage: isCloudinaryConfigured ? videoStorageEngine : localVideoStorage,
     fileFilter: videoFileFilter,
@@ -113,6 +116,7 @@ const uploadErrorhandler = (uploadMiddleware) => {
                 // Remove any direct console.log(error) or similar lines
             }
             if(error instanceof multer.MulterError){
+                console.error("Multer error:", error.code, error.message);
                 switch (error.code) {
                     case 'LIMIT_FILE_SIZE':
                         return next(new apiError(400, 'File too large. Please select a smaller file.'));
@@ -125,8 +129,10 @@ const uploadErrorhandler = (uploadMiddleware) => {
                 }
             }
             if(error){
+                console.error("Non-multer error:", error.message);
                 return next(error);
             }
+            console.log("Upload middleware completed successfully");
             next();
         })
     }

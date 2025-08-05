@@ -2,6 +2,7 @@ import asyncHandler from '../utiles/asyncHandler.js'
 import user from '../models/user.model.js' // from next project, must create models in pascalCase.
 import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js'
+import { isCloudinaryConfigured } from '../utiles/cloudinary.js'
 
 // Generate Access and Refresh Tokens
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -22,7 +23,9 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async(req, res, next) => {
-
+    console.log("registerUser function called");
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
 
     const {username, password, email, firstName, lastName} = req.body;
 
@@ -39,12 +42,21 @@ const registerUser = asyncHandler(async(req, res, next) => {
     // Handle avatar upload
     let avatarUrl = null;
     if(req.file){
-        avatarUrl = req.file.path;
+        console.log("Avatar file received:", req.file);
+        if (isCloudinaryConfigured) {
+            // Cloudinary returns a full URL
+            avatarUrl = req.file.path;
+        } else {
+            // Local storage - create a URL that can be accessed by frontend
+            avatarUrl = `/uploads/images/${req.file.filename}`;
+        }
+        console.log("Avatar URL set to:", avatarUrl);
     }
 
     //Create new user
         const newUser = new user({username, password, email, firstName, lastName: lastName || null, avatar: avatarUrl})
         await newUser.save();
+        console.log("User saved successfully:", newUser._id);
 
     const userResponse = {
         username: newUser.username,
@@ -55,8 +67,10 @@ const registerUser = asyncHandler(async(req, res, next) => {
     };
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(newUser._id);
+    console.log("Tokens generated successfully");
 
     // send response
+    console.log("Sending success response");
     return res.status(201).json(new apiResponse(201, "User registered successfully", {
         user: userResponse,
         accessToken,

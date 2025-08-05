@@ -3,11 +3,13 @@ import loginImage from '../assets/login-img.jpg';
 import Button from './Button';
 import YouTubeLogo from '../assets/YouTube-Logo.png';
 import signupImage from '../assets/signup.jpg'
+import { useNavigate } from 'react-router-dom';
 
 function SignUp() {
     const [selectedAvatar, setSelectedAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const navigate = useNavigate();
 
     const handleAvatarChange = (event) => {
         const file = event.target.files[0];
@@ -29,9 +31,11 @@ function SignUp() {
             setSelectedAvatar(file);
             
             // Create preview
-            // Alternative: Use URL.createObjectURL for preview
-            const previewUrl = URL.createObjectURL(file);
-            setAvatarPreview(previewUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setAvatarPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -65,8 +69,8 @@ function SignUp() {
                 formData.append('avatar', selectedAvatar);
             }
 
-            // Replace with your actual API endpoint
-            const response = await fetch('/signup', {
+            // Use the correct backend API endpoint
+            const response = await fetch('http://localhost:3000/api/auth/signup', {
                 method: 'POST',
                 body: formData,
             });
@@ -75,12 +79,17 @@ function SignUp() {
                 const result = await response.json();
                 console.log('Account created successfully:', result);
                 // Handle success (redirect, show message, etc.)
+                alert('Account created successfully!');
+                navigate('/');
+                // You can redirect to login page or dashboard here
             } else {
-                console.error('Error creating account');
-                // Handle error
+                const errorData = await response.json();
+                console.error('Error creating account:', errorData);
+                alert(`Error: ${errorData.message || 'Failed to create account'}`);
             }
         } catch (error) {
             console.error('Error:', error);
+            alert('Network error. Please try again.');
         } finally {
             setIsUploading(false);
         }
@@ -214,12 +223,11 @@ function SignUp() {
                             </div>
 
                             <div>
-                                <Button 
-                                    text={isUploading ? "Creating Account..." : "Create Account"} 
-                                    className='w-full pt-2 pr-3 pb-2 pl-3 bg-black text-white text-center mt-1 rounded disabled:opacity-50'
+                                <button 
+                                    className='w-fullointer cursor-pointer pt-2 pr-3 pb-2 pl-3 bg-black text-white text-center mt-1 rounded disabled:opacity-50 w-full'
                                     disabled={isUploading}
                                     type="submit"
-                                />
+                                    >{isUploading ? "Creating Account..." : "Create Account"} </button>
                                 <p className='text-center w-full pt-0.5'>
                                     Already have an account? <span><a className='underline' href="#">Login</a></span>
                                 </p>
