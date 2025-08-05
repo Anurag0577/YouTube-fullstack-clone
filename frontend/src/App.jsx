@@ -1,17 +1,35 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import Header from './components/header'
+import Header from './components/header.jsx'
 import './App.css'
-import Login from './components/Login'
-import SignUp from './components/SignUp'
+import Login from './components/Login.jsx'
+import SignUp from './components/SignUp.jsx'
+import Homepage from './components/Homepage.jsx'
+
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import PageNotFound from './components/PageNotFound.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const router = createBrowserRouter([
+    {
+      path: '/login',
+      element: <Login />
+    },
+    {
+      path: '/signup',
+      element: <SignUp/>
+    },
+    {
+      path: '/',
+      element: <Homepage/>,
+      errorElement: <PageNotFound/>
+    }
+  ])
 
   return (
     <>
-      <SignUp></SignUp>
+      <RouterProvider router={router}/>
     </>
   )
 }

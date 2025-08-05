@@ -19,35 +19,43 @@ cloudinary.config({
 const validateCloudinaryConfig = () => {
     const {cloud_name, api_key, api_secret} = cloudinary.config();
     if(!cloud_name || !api_key || !api_secret){
-        throw new apiError('Cloudinary configuration is incomplete. Please check environment variable.')
+        console.warn('Cloudinary configuration is incomplete. Please check environment variables. File uploads may not work properly.');
+        return false;
     }
+    return true;
 }
 
-// Validate config on startup
-validateCloudinaryConfig();
+// Only validate if environment variables are present
+const isCloudinaryConfigured = validateCloudinaryConfig();
 
-const imageStorageEngine = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'images',
-        allowed_formats: ['jpeg', 'png', 'jpg'], 
-        resource_type: 'image'
-    }
-});
+// Only create storage engines if Cloudinary is properly configured
+let imageStorageEngine = null;
+let videoStorageEngine = null;
 
-const videoStorageEngine = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'videos',
-        allowed_formats: ['mp4', 'avi', 'webm'], 
-        resource_type: 'video'
-    }
-});
+if (isCloudinaryConfigured) {
+    imageStorageEngine = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'images',
+            allowed_formats: ['jpeg', 'png', 'jpg'], 
+            resource_type: 'image'
+        }
+    });
 
+    videoStorageEngine = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'videos',
+            allowed_formats: ['mp4', 'avi', 'webm'], 
+            resource_type: 'video'
+        }
+    });
+}
 
 export { 
     cloudinary, 
     imageStorageEngine, 
     videoStorageEngine, 
-    validateCloudinaryConfig 
+    validateCloudinaryConfig,
+    isCloudinaryConfigured
 };
