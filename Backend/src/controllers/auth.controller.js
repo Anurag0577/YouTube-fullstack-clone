@@ -1,5 +1,5 @@
 import asyncHandler from '../utiles/asyncHandler.js'
-import user from '../models/user.model.js' // from next project, must create models in pascalCase.
+import user from '../models/user.model.js'
 import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js'
 import { isCloudinaryConfigured } from '../utiles/cloudinary.js'
@@ -9,12 +9,16 @@ const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const userFound = await user.findById(userId);
         
+        if (!userFound) {
+            throw new apiError(404, "User not found");
+        }
+
         const accessToken = userFound.genAccessToken();
         const refreshToken = userFound.genRefreshToken();
 
         // Save refresh token to database
         userFound.refreshToken = refreshToken;
-        await userFound.save({ validateBeforeSave: false }); // when you use validateBeforeSave: false then it does not matter whether the model have this field/property or not means if model dont have refreshToken then it going to create it and save the value.
+        await userFound.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
     } catch (error) {
@@ -44,32 +48,40 @@ const registerUser = asyncHandler(async(req, res, next) => {
     if(req.file){
         console.log("Avatar file received:", req.file);
         if (isCloudinaryConfigured) {
-            // Cloudinary returns a full URL
             avatarUrl = req.file.path;
         } else {
-            // Local storage - create a URL that can be accessed by frontend
             avatarUrl = `/uploads/images/${req.file.filename}`;
         }
         console.log("Avatar URL set to:", avatarUrl);
     }
 
-    //Create new user
-        const newUser = new user({username, password, email, firstName, lastName: lastName || null, avatar: avatarUrl})
-        await newUser.save();
-        console.log("User saved successfully:", newUser._id);
+    // Create new user
+    const newUser = new user({
+        username, 
+        password, 
+        email, 
+        firstName, 
+        lastName: lastName || null, 
+        avatar: avatarUrl
+    });
+    
+    await newUser.save();
+    console.log("User saved successfully:", newUser._id);
+
+    // Generate access and refresh tokens
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(newUser._id);
+    console.log("Tokens generated successfully");
 
     const userResponse = {
+        userId: newUser._id,
         username: newUser.username,
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         avatar: newUser.avatar
     };
-    // Generate access and refresh tokens
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(newUser._id);
-    console.log("Tokens generated successfully");
 
-    // send response
+    // Send response
     console.log("Sending success response");
     return res.status(201).json(new apiResponse(201, "User registered successfully", {
         user: userResponse,
@@ -78,54 +90,58 @@ const registerUser = asyncHandler(async(req, res, next) => {
     }));
 })
 
-
-// Login 
-
 const loginUser = asyncHandler(async(req, res, next) => {
-    // Steps
-    // get login credentials from the forntend
-    // compare password
-    // if password match let him login
-    // otherwise givve  error
-
     const {email, password} = req.body;
 
-    // check for password
+    // Validate input
     if(!email || !password){
         throw new apiError(400, "Email and password both required for login!")
     }
 
-    // Validate the credentials
-    const loginUser = await user.findOne({email}).select("+password")
+    // Find user with password
+    const loginUser = await user.findOne({email}).select("+password");
     if(!loginUser){
         throw new apiError(401, "Invalid login credentials!")
     }
 
+    // Check password
     const isCorrect = await loginUser.isPasswordCorrect(password);
     if(!isCorrect){
         throw new apiError(401, "Invalid login credentials!")
     }
 
+    // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(loginUser._id);
 
-    
-
-    res.status(200).json(new apiResponse(200, "User login successfull!", {
+    // Prepare response data
+    const responseData = {
+        userId: loginUser._id,
         username: loginUser.username,
         email: loginUser.email,
         firstName: loginUser.firstName,
         lastName: loginUser.lastName,
         avatar: loginUser.avatar,
-        userId: loginUser._id,
         refreshToken,
         accessToken
-    }))
-})
+    };
 
-const logoutUser = async(req, res, next) => {
+    // Send response
+    res.status(200).json(new apiResponse(200, "User login successful!", responseData));
+});
 
-    // get user from the request
-    const userId = req.user._id;    
-}
+const logoutUser = asyncHandler(async(req, res, next) => {
+    // Get user from the request (assuming you have auth middleware)
+    const userId = req.user._id;
+    
+    // Remove refresh token from database
+    await user.findByIdAndUpdate(userId, {
+        $set: {
+            refreshToken: null
+        }
+    });
 
-export {registerUser , loginUser, logoutUser};
+    // Send response
+    res.status(200).json(new apiResponse(200, "User logged out successfully", {}));
+});
+
+export { registerUser, loginUser, logoutUser };

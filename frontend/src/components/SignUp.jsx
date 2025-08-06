@@ -106,7 +106,7 @@ function SignUp() {
                     <div className='login-form flex flex-col justify-between items-left w-full h-[100%] p-1'>
                         <div className='bold text-left black flex flex-col justify-center items-start'>
                             <img 
-                                className="h-16 cursor-pointer" 
+                                className="h-7 m-1 cursor-pointer" 
                                 src={YouTubeLogo} 
                                 alt="YouTube Logo"
                             />
@@ -200,7 +200,7 @@ function SignUp() {
                                     </div>
                                 ) : (
                                     <div 
-                                        className='avatar-upload-area border-2 border-dashed border-gray-300 rounded-lg p-2 text-center cursor-pointer hover:border-gray-400 transition-colors'
+                                        className='avatar-upload-area border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-gray-400 transition-colors'
                                         onClick={() => document.getElementById('avatar-input').click()}
                                     >
                                         <div className='upload-icon mb-2'>

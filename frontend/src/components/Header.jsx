@@ -1,55 +1,51 @@
 import { useState, useEffect } from 'react'
-import { jwtDecode } from 'jwt-decode' // Fixed import
 import Button from './Button.jsx'
 import { useNavigate } from 'react-router-dom'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import YouTubeLogo from '../assets/YouTube-Logo.png';
+import { FiPlus } from "react-icons/fi";
+
 
 function Header() {
-    const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [avatar, setAvatar] = useState('')
     const [isUserLogin, setIsUserLogin] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const accessToken = localStorage.getItem('accessToken');
-        if (accessToken) {
+        const user = localStorage.getItem('user');
+        if (user) {
             try {
-                const decodedToken = jwtDecode(accessToken);
-                
-                // Check if token is expired
-                const currentTime = Date.now() / 1000;
-                if (decodedToken.exp && decodedToken.exp < currentTime) {
-                    // Token expired
-                    localStorage.removeItem('accessToken');
-                    setIsUserLogin(false);
-                    setUsername('');
-                    return;
-                }
+                // Use JSON.parse instead of jwtDecode because 'user' is a JSON object, not a JWT token
+                const parsedUser = JSON.parse(user);
 
-                if (decodedToken && decodedToken.username) {
+                if (parsedUser && parsedUser.firstName) {
                     setIsUserLogin(true);
-                    setUsername(decodedToken.username);
+                    setFirstName(parsedUser.firstName);
+                    setAvatar(parsedUser.avatar || ''); // Provide fallback for avatar
                 } else {
                     setIsUserLogin(false);
-                    setUsername('');
+                    setFirstName('');
+                    setAvatar('');
                 }
             } catch (error) {
-                console.error('Token decode error:', error);
-                // Invalid token, remove it
-                localStorage.removeItem('accessToken');
+                console.error('JSON parse error:', error);
+                // Invalid JSON, remove it
+                localStorage.removeItem('user');
                 setIsUserLogin(false);
-                setUsername('');
+                setFirstName('');
+                setAvatar('');
             }
         } else {
             setIsUserLogin(false);
-            setUsername('');
+            setFirstName('');
+            setAvatar(''); // Fixed: was missing quotes
         }
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        setIsUserLogin(false);
-        setUsername('');
+    const handleLogin = () => {
+        navigate('/login');
     };
 
     return (
@@ -57,38 +53,44 @@ function Header() {
             {/* Left side - Logo */}
             <div className="flex items-center">
                 <img 
-                    className="h-16 cursor-pointer" 
+                    className="h-6 m-1 cursor-pointer" 
                     src={YouTubeLogo} 
                     alt="YouTube Logo"
-                    
+                    onClick={() => navigate('/')}
                 />
             </div>
 
             {/* Right side - User actions */}
-            <div className="flex items-center gap-2 w-40 justify-around">
-                {true ? (
+            <div className="flex w-[20%] items-center gap-2 justify-end">
+                {isUserLogin ? (
                     <>
+                        {/* <p className='pr-4 '>Hi, {firstName}</p> */}
                         <Button 
                             className="btn-primary min-h-3.5 pt-1.5 pr-3 pb-1.5 pl-3 rounded-2xl bg-gray-200 flex"
-                            text="Create" 
+                            text="Create"
                         />
                         <Button 
                             className='w-8 h-8 flex items-center justify-center'
                             icon={<IoMdNotificationsOutline size={28} />}
                         />
-                        <div className='rounded-full w-8 h-8 border-black border-2 '>
-                            <img 
-                                className="object-cover w-full h-full rounded-full" 
-                                src='https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?cs=srgb&dl=pexels-olly-3763188.jpg&fm=jpg'
-                                alt="Profile"
-                            />
-                        </div>
-                    
+                        {avatar ? (
+                            <div className='rounded-full w-8 h-8 border-black border-2'>
+                                <img 
+                                    className="object-cover w-full h-full rounded-full" 
+                                    src={avatar}
+                                    alt="Profile"
+                                />
+                            </div>
+                        ) : (
+                            <div className='rounded-full w-8 h-8 border-black border-2 bg-gray-300 flex items-center justify-center'>
+                                <span className="text-sm font-semibold">{firstName.charAt(0).toUpperCase()}</span>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <Button 
                         text="Login" 
-                        
+                        onClick={handleLogin}
                     />
                 )}
             </div>
