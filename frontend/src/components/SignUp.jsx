@@ -229,7 +229,7 @@ function SignUp() {
                                     type="submit"
                                     >{isUploading ? "Creating Account..." : "Create Account"} </button>
                                 <p className='text-center w-full pt-0.5'>
-                                    Already have an account? <span><a className='underline' href="#">Login</a></span>
+                                    Already have an account? <span><a className='underline cursor-pointer' href="#">Login</a></span>
                                 </p>
                             </div>
                         </form>
