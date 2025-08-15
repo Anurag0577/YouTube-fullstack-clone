@@ -115,7 +115,7 @@ function Login() {
                         <div className='w-full'>
                             <Button 
                                 text={loading ? "Logging in..." : "Login"} 
-                                className='w-full pt-2 pr-3 pb-2 pl-3 bg-black text-white text-center mt-6 rounded disabled:opacity-50' 
+                                className='w-full pt-2 pr-3 pb-2 pl-3 cursor-pointer bg-black text-white text-center mt-6 rounded disabled:opacity-50' 
                                 onClick={handleLogin}
                                 disabled={loading}
                             />
@@ -123,7 +123,7 @@ function Login() {
                                 Don't have account? 
                                 <span>
                                     <button 
-                                        className='underline ml-1' 
+                                        className='underline ml-1 cursor-pointer' 
                                         onClick={() => navigate('/signup')}
                                         disabled={loading}
                                     >
