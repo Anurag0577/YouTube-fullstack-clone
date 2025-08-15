@@ -4,7 +4,50 @@ import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js';
 import cloudinary from 'cloudinary';
 
+// GET /api/allVideos - Returns: Random list of video
+// get list of videos for the homepage feed.
+const allVideos = asyncHandler(async (req, res) => {
+    const { page = 1 , limit = 30} = req.query;
+    const pageNum = parseInt(page)
+    const videoLimit = parseInt(limit)
+    const skip = (pageNum - 1)* videoLimit;
+    const randomVideos = await videos.aggregate([
+        {
+            $match: {isPublished : true}
+        },
+        {
+            $sample: { size: videoLimit + skip }
+        },
+        {
+            $skip: skip
+        },
+        {
+            $limit: videoLimit
+        },
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                videoUrl: 1,
+                thumbnailUrl: 1,
+                duration: 1,
+                views: 1,
+                likes: 1,
+                dislikes: 1,
+                channel: 1,
+                owner: 1,
+                publishedAt: 1
+            }
+        }
+    ])
 
+    if(randomVideos.length <= 0){
+        throw new apiError(404, "No videos found.")
+    }
+
+
+    res.status(200).json(new apiResponse(200, "random video generation successfull!", randomVideos))
+})
 // GET /api/videos/:videoId - Takes: videoId → Returns: video details + channel info | 
 // Gets video details for video player page
 const videoInformation = asyncHandler(async(req, res, next) => {
@@ -13,6 +56,7 @@ const videoInformation = asyncHandler(async(req, res, next) => {
     const videoInfo = await videos.findById(videoId);
     if(!videoInfo){
         throw new apiError(500, "video not found!")
+        
     }
 
     res.status(200).json(new apiResponse(200, "Video information successfully fetched!", videoInfo))
@@ -103,4 +147,4 @@ const incrementViewCount = asyncHandler(async(req, res) => {
 })
 
 
-export {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount}
+export {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount, allVideos}

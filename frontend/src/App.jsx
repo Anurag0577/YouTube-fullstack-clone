@@ -6,6 +6,7 @@ import './App.css'
 import Login from './components/Login.jsx'
 import SignUp from './components/SignUp.jsx'
 import Homepage from './components/Homepage.jsx'
+import Dashboard from './components/Dashboard.jsx'
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
@@ -22,8 +23,11 @@ function App() {
     },
     {
       path: '/',
-      element: <Homepage/>,
-      errorElement: <PageNotFound/>
+      element: <Homepage/>
+    },
+    {
+      path: '/channel-dashboard',
+      element: <Dashboard/>
     }
   ])
 
