@@ -1,9 +1,10 @@
-import user from "../models/user.model";
-import asyncHandler from "../utiles/asyncHandler";
-import channels from "../models/channels.model.js"
-import apiError from "../utiles/apiError";
+import express from "express"
+import user from "../models/user.model.js";
+import asyncHandler from "../utiles/asyncHandler.js";
+import channel from "../models/channels.model.js"
+import apiError from "../utiles/apiError.js";
+import apiResponse from "../utiles/apiResponse.js";
 
-const express = express;
 
 const createChannelAuto = asyncHandler(async(req, res) => {
     const userId = req.user.id;
@@ -11,15 +12,19 @@ const createChannelAuto = asyncHandler(async(req, res) => {
     if(!userDetail){
         throw new apiError(500, "Does not get user detail from the server")
     }
-    const channel = new channels({
-        channelName : userDetail.username,
+    const channelName = userDetail.username;
+    const newChannel = new channel({
+        channelName,
         owner: userDetail._id,
         avatar: userDetail.avatar,
     })
 
-    const savedChannel = await channel.save();
+    const savedChannel = await newChannel.save();
 
-    res.status(200).json(apiResponse(200, "Channel created successfully!", savedChannel))
+    userDetail.channel = savedChannel._id;
+    await userDetail.save();
+
+    res.status(200).json(new apiResponse(200, "Channel created successfully!", savedChannel))
 })
 
 const createChannelManualy = asyncHandler( async(req, res) => {
@@ -36,7 +41,7 @@ const createChannelManualy = asyncHandler( async(req, res) => {
     })
 
     const savedChannel = await channel.save();
-    res.status(200).json(apiResponse(200, "Channel created successfully!", savedChannel))
+    res.status(200).json(new apiResponse(200, "Channel created successfully!", savedChannel))
 })
 
 export default {createChannelAuto, createChannelManualy}

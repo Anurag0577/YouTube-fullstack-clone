@@ -1,9 +1,9 @@
-import express from express;
+import channelController from '../controllers/channel.controller.js'
 import authenticateUser from '../middlewares/authenticateUser.middleware.js'
-const router = express.router;
+import express from "express";
+const router = express.Router();
 
+router.post('/auto', authenticateUser, channelController.createChannelAuto)
+router.post('/manual', authenticateUser, channelController.createChannelManualy)
 
-router.post('/channel', authenticateUser, createChannelAuto)
-router.post('/channel', authenticateUser, createChannelManualy)
-
-export default channelRoutes.js
+export default router;

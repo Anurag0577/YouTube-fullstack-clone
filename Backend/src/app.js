@@ -9,6 +9,7 @@ import errorHandler from "./middlewares/errorHandler.js";
 import engagementRoutes from './routes/engagementRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import channelRoutes from './routes/channelRoutes.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -40,6 +41,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/engagement', engagementRoutes)
 app.use('/api/comments', commentRoutes)
 app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/channel', channelRoutes)
 // Move error handler to the end
 app.use(errorHandler)
 

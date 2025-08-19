@@ -43,8 +43,8 @@ const videoSchema = new mongoose.Schema({
   },
   channel: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Channel'
-    // required: [true, 'Channel is required']
+    ref: 'Channel',
+    required: [true, 'Channel is required']
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -69,7 +69,7 @@ const videoSchema = new mongoose.Schema({
 
 
 videoSchema.pre('save', async function(next){
-  if(this.isModified(this.isPublished) && (this.isPublished) && (!this.publishedAt)){
+  if (this.isModified('isPublished') && this.isPublished && !this.publishedAt) {
     this.publishedAt = new Date();
   }
   next()

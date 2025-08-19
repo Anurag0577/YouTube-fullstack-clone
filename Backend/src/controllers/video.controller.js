@@ -1,8 +1,10 @@
 import asyncHandler from '../../src/utiles/asyncHandler.js'
+import user from '../models/user.model.js';
+import channel from '../models/channels.model.js'
 import videos from '../models/videos.model.js';
 import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js';
-import cloudinary from 'cloudinary';
+import { cloudinary } from '../utiles/cloudinary.js';
 
 // GET /api/allVideos - Returns: Random list of video
 // get list of videos for the homepage feed.
@@ -12,18 +14,30 @@ const allVideos = asyncHandler(async (req, res) => {
     const videoLimit = parseInt(limit)
     const skip = (pageNum - 1)* videoLimit;
     const randomVideos = await videos.aggregate([
+        { $match: { isPublished: true } },
+        { $sample: { size: videoLimit + skip } },
+        { $skip: skip },
+        { $limit: videoLimit },
+        // Join channel details
         {
-            $match: {isPublished : true}
+            $lookup: {
+                from: 'channels',
+                localField: 'channel',
+                foreignField: '_id',
+                as: 'channelDoc'
+            }
         },
+        { $unwind: { path: '$channelDoc', preserveNullAndEmptyArrays: true } },
+        // Join owner details
         {
-            $sample: { size: videoLimit + skip }
+            $lookup: {
+                from: 'users',
+                localField: 'owner',
+                foreignField: '_id',
+                as: 'ownerDoc'
+            }
         },
-        {
-            $skip: skip
-        },
-        {
-            $limit: videoLimit
-        },
+        { $unwind: { path: '$ownerDoc', preserveNullAndEmptyArrays: true } },
         {
             $project: {
                 title: 1,
@@ -34,9 +48,14 @@ const allVideos = asyncHandler(async (req, res) => {
                 views: 1,
                 likes: 1,
                 dislikes: 1,
-                channel: 1,
-                owner: 1,
-                publishedAt: 1
+                publishedAt: 1,
+                // Prefer channel name/avatar; fall back to owner's
+                channelName: {
+                    $ifNull: ['$channelDoc.channelName', '$ownerDoc.username']
+                },
+                channelAvatar: {
+                    $ifNull: ['$channelDoc.avatar', '$ownerDoc.avatar']
+                },
             }
         }
     ])
@@ -62,25 +81,75 @@ const videoInformation = asyncHandler(async(req, res, next) => {
     res.status(200).json(new apiResponse(200, "Video information successfully fetched!", videoInfo))
 })
 
-// POST /api/videos - Takes: video file + metadata (title, description, thumbnail) → Returns: created video object | 
-// Uploads new video to platform
+// POST /api/videos - Takes: video file + thumbnail image + metadata (title, description) → Returns: created video object
+// Uploads new video and its thumbnail to the platform
 const newVideo = asyncHandler(async(req, res) => {
-    const {title, description } = req.body;
+    const { title, description } = req.body;
+    const userId = req.user.id;
+    const userDetail = await user.findById(userId);
+    if (!userDetail) {
+        throw new apiError(500, "Did not get user.")
+    }
 
-    const duration = req.file && req.file.duration !== undefined ? req.file.duration : 0;
-    const videoUrl = req.file && req.file.path ? req.file.path : '';
-    const thumbnailUrl = req.file && req.file.path ? req.file.path : '';
+    const channelDetail = await channel.findById(userDetail.channel);
 
+    // Expecting multipart form-data with fields: video (file), thumbnail (file)
+    const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
+    const thumbnailFile = req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail[0] ? req.files.thumbnail[0] : null;
+
+    if (!videoFile) {
+        throw new apiError(400, "Video file is required.");
+    }
+    if (!thumbnailFile) {
+        throw new apiError(400, "Thumbnail image is required.");
+    }
+
+    let duration = typeof videoFile.duration === 'number' ? videoFile.duration : 0;
+    if (!duration) {
+        const extractPublicIdFromUrl = (url) => {
+            if (!url) return null;
+            const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\.[^\/\.]+$/);
+            return match && match[1] ? match[1] : null;
+        };
+
+        const publicIdCandidate = videoFile.filename || videoFile.public_id || extractPublicIdFromUrl(videoFile.path);
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const fetchDurationWithRetry = async (publicId, attempts = 3, delayMs = 700) => {
+            for (let attempt = 1; attempt <= attempts; attempt++) {
+                try {
+                    const details = await cloudinary.api.resource(publicId, { resource_type: 'video' });
+                    if (details && typeof details.duration === 'number' && details.duration > 0) {
+                        return details.duration;
+                    }
+                } catch (err) {
+                    // ignore and retry
+                }
+                if (attempt < attempts) {
+                    await wait(delayMs);
+                }
+            }
+            return 0;
+        };
+
+        if (publicIdCandidate) {
+            duration = await fetchDurationWithRetry(publicIdCandidate, 3, 700);
+        }
+    }
+
+    const videoUrl = videoFile.path || '';
+    const thumbnailUrl = thumbnailFile.path || '';
 
     const newVideoInfo = new videos({
         title,
         description,
         videoUrl,
+        duration,
         thumbnailUrl,
-        channel: null, // Assuming req.user contains the authenticated user's info
-        owner: req.user._id, // Assuming req.user contains the authenticated user's info
-        isPublished: false, // Default to false until published
+        channel: userDetail.channel,
+        owner: req.user._id,
+        isPublished: true,
     })
+    console.log(newVideoInfo);
 
     await newVideoInfo.save();
 

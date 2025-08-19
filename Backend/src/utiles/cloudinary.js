@@ -39,6 +39,7 @@ console.log('Cloudinary configured:', isCloudinaryConfigured);
 // Only create storage engines if Cloudinary is properly configured
 let imageStorageEngine = null;
 let videoStorageEngine = null;
+let mixedStorageEngine = null;
 
 if (isCloudinaryConfigured) {
     console.log('Creating Cloudinary storage engines...');
@@ -59,6 +60,30 @@ if (isCloudinaryConfigured) {
             resource_type: 'video'
         }
     });
+    
+    // Mixed storage engine to handle both images and videos in the same request
+    mixedStorageEngine = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: (req, file) => {
+            const isVideo = file.mimetype && file.mimetype.startsWith('video/');
+            const isImage = file.mimetype && file.mimetype.startsWith('image/');
+            if (isVideo) {
+                return {
+                    folder: 'videos',
+                    allowed_formats: ['mp4', 'avi', 'webm'],
+                    resource_type: 'video'
+                };
+            }
+            if (isImage) {
+                return {
+                    folder: 'images',
+                    allowed_formats: ['jpeg', 'png', 'jpg'],
+                    resource_type: 'image'
+                };
+            }
+            throw new apiError(400, 'Unsupported file type. Only images and videos are allowed.');
+        }
+    });
     console.log('Cloudinary storage engines created successfully');
 } else {
     console.log('Using local storage engines (Cloudinary not configured)');
@@ -68,6 +93,7 @@ export {
     cloudinary, 
     imageStorageEngine, 
     videoStorageEngine, 
+    mixedStorageEngine,
     validateCloudinaryConfig,
     isCloudinaryConfigured
 };

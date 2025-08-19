@@ -46,23 +46,23 @@ const userSchema = new mongoose.Schema({
   },
   watchHistory: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Video'
+    ref: 'videos'
   }],
   likedVideos: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Video'
+    ref: 'videos'
   }],
   dislikedVideos: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Video'
+    ref: 'videos'
   }],
   savedVideos: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Video'
+    ref: 'videos'
   }],
   channel: {
-    type:mongoose.Types.ObjectId,
-    ref: 'Channel'
+    type:mongoose.Schema.Types.ObjectId,
+    ref: 'channel'
   },
   refreshToken: {
     type: String,

@@ -4,8 +4,8 @@ const channelSchema = new mongoose.Schema({
   channelName: { // same as usernamer default, but you can change it.
     type: String,
     required: [true, 'Channel name is required'],
-    unique: true,
     trim: true,
+    unique: true,
     minlength: [3, 'Channel name must be at least 3 characters'],
     maxlength: [50, 'Channel name cannot exceed 50 characters']
   },

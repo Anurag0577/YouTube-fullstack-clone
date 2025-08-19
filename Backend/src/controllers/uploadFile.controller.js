@@ -13,7 +13,6 @@ const uploadSingleImage = asyncHandler(async(req, res, next) => {
 
         let uploadedImage;
         
-        if (isCloudinaryConfigured) {
             // Cloudinary file structure
             uploadedImage = {
                 url: req.file.path,
@@ -23,17 +22,6 @@ const uploadSingleImage = asyncHandler(async(req, res, next) => {
                 width: req.file.width,
                 height: req.file.height
             };
-        } else {
-            // Local storage file structure
-            uploadedImage = {
-                url: `/uploads/images/${req.file.filename}`,
-                public_id: req.file.filename,
-                format: req.file.mimetype.split('/')[1],
-                size: req.file.size,
-                filename: req.file.filename,
-                originalname: req.file.originalname
-            };
-        }
 
         res.status(200).json(new apiResponse(200, "Image uploaded successfully!", uploadedImage));
     } catch (error) {
@@ -92,7 +80,6 @@ const uploadVideoFile = asyncHandler(async(req, res, next) => {
         
         let uploadedVideo;
         
-        if (isCloudinaryConfigured) {
             // Cloudinary file structure
             uploadedVideo = {
                 url: req.file.path,
@@ -101,17 +88,6 @@ const uploadVideoFile = asyncHandler(async(req, res, next) => {
                 size: req.file.bytes,
                 duration: req.file.duration // Available for videos
             };
-        } else {
-            // Local storage file structure
-            uploadedVideo = {
-                url: `/uploads/videos/${req.file.filename}`,
-                public_id: req.file.filename,
-                format: req.file.mimetype.split('/')[1],
-                size: req.file.size,
-                filename: req.file.filename,
-                originalname: req.file.originalname
-            };
-        }
 
         // ✅ Fixed: Added missing parentheses for status method
         res.status(200).json(new apiResponse(200, "Video uploaded successfully!", uploadedVideo));
