@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import Header from "./header";
+import Header from "./Header";
 import HomepageGrid from "./HomepageGrid.jsx";
-
+import { BsCameraVideoOffFill } from 'react-icons/bs';
 function Homepage() {
     // Sample video data (you can replace this with your actual data)
     const [randomVideos, setRandomVideos] = useState([]);
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
 
 
     useEffect(() => {
@@ -38,15 +38,16 @@ function Homepage() {
     //     channelAvatar: "https://res.cloudinary.com/dywh2ogcw/image/upload/v1754424554/images/lobft8my2615fbyiod7w.jpg"
     // });
 
-    
+    // <HomepageGrid 
+//     videos={randomVideos}
+//     currentUserAvatar={user?.avatar}
+// />
 
     return (
         <>
             <Header />
-            <HomepageGrid 
-                videos={randomVideos}
-                currentUserAvatar={user?.avatar}
-            />
+            { (randomVideos.length > 0) ? <HomepageGrid videos={randomVideos} currentUserAvatar={user?.avatar} /> : <div className=" w-full h-screen flex justify-center mt-7 bolder text-2xl" >Sorry, No video available!</div> }
+            
         </>
     );
 }

@@ -12,11 +12,7 @@ import multer from 'multer';
 const cloudEnabled = typeof isCloudinaryConfigured === 'function'
   ? isCloudinaryConfigured()
   : !!isCloudinaryConfigured;
-
-if (!cloudEnabled) {
-  // If you prefer not to crash on startup, you can log a warning and later return 500 on use.
-  throw new Error('Cloudinary is not configured. Please set Cloudinary credentials to enable uploads.');
-}
+// Do not crash server on missing Cloudinary; downstream will handle optional uploads gracefully
 
 // Filters
 const imageFileFilter = (req, file, cb) => {
@@ -104,6 +100,14 @@ const uploadErrorhandler = (uploadMiddleware) => {
 
       if (error) {
         console.error('Non-multer error:', error.message);
+        // Graceful handling for transient network errors when avatar upload is optional
+        if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+          console.warn('Continuing without uploaded file due to network error during upload.');
+          req.file = undefined;
+          req.files = undefined;
+          req.uploadWarning = error.code;
+          return next();
+        }
         return next(error);
       }
 

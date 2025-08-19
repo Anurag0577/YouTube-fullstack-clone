@@ -76,11 +76,31 @@ function SignUp() {
             });
 
             if (response.ok) {
-                const result = await response.json();
-                console.log('Account created successfully:', result);
+                const data = await response.json();
+                console.log('Account created successfully:', data);
                 // Handle success (redirect, show message, etc.)
                 alert('Account created successfully!');
-                navigate('/');
+
+                // Store both tokens
+                if (data?.data?.accessToken) {
+                    localStorage.setItem('accessToken', data.data.accessToken);
+                }
+                if (data?.data?.refreshToken) {
+                    localStorage.setItem('refreshToken', data.data.refreshToken);
+                }
+
+                // Store user data
+                const user = data?.data?.user || {};
+                localStorage.setItem('user', JSON.stringify({
+                    userId: user.userId,
+                    username: user.username,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    avatar: user.avatar
+                }));
+
+            navigate('/');
                 // You can redirect to login page or dashboard here
             } else {
                 const errorData = await response.json();
@@ -229,7 +249,7 @@ function SignUp() {
                                     type="submit"
                                     >{isUploading ? "Creating Account..." : "Create Account"} </button>
                                 <p className='text-center w-full pt-0.5'>
-                                    Already have an account? <span><a className='underline cursor-pointer' href="#">Login</a></span>
+                                    Already have an account? <span><a className='underline cursor-pointer' onClick={() => navigate('/login')}>Login</a></span>
                                 </p>
                             </div>
                         </form>

@@ -57,7 +57,8 @@ if (isCloudinaryConfigured) {
         params: {
             folder: 'videos',
             allowed_formats: ['mp4', 'avi', 'webm'], 
-            resource_type: 'video'
+            resource_type: "video",
+            media_metadata: true
         }
     });
     

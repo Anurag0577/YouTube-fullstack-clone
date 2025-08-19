@@ -64,9 +64,9 @@ const allVideos = asyncHandler(async (req, res) => {
         throw new apiError(404, "No videos found.")
     }
 
-
     res.status(200).json(new apiResponse(200, "random video generation successfull!", randomVideos))
 })
+
 // GET /api/videos/:videoId - Takes: videoId → Returns: video details + channel info | 
 // Gets video details for video player page
 const videoInformation = asyncHandler(async(req, res, next) => {
@@ -75,23 +75,99 @@ const videoInformation = asyncHandler(async(req, res, next) => {
     const videoInfo = await videos.findById(videoId);
     if(!videoInfo){
         throw new apiError(500, "video not found!")
-        
     }
 
     res.status(200).json(new apiResponse(200, "Video information successfully fetched!", videoInfo))
 })
+
+// Helper function to extract public ID from various sources
+const getPublicIdFromVideo = (videoFile) => {
+    // Try different possible sources for public ID
+    if (videoFile.public_id) {
+        return videoFile.public_id;
+    }
+    
+    if (videoFile.filename) {
+        return videoFile.filename;
+    }
+    
+    return null;
+};
+
+// Helper function to get duration from Cloudinary with retry logic
+const getDurationFromCloudinary = async (publicId, maxRetries = 5, initialDelay = 1000) => {
+    if (!publicId) {
+        console.log('No public ID provided for duration fetch');
+        return 0;
+    }
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Attempt ${attempt}: Fetching duration for public ID: ${publicId}`);
+            
+            const resource = await cloudinary.api.resource(publicId, { 
+                resource_type: 'video',
+                // Request specific fields to optimize the call
+                media_metadata: true
+            });
+            
+            console.log('Cloudinary resource response:', {
+                public_id: resource.public_id,
+                duration: resource.duration,
+                resource_type: resource.resource_type,
+                format: resource.format
+            });
+            
+            if (resource && typeof resource.duration === 'number' && resource.duration > 0) {
+                console.log(`Duration found: ${resource.duration} seconds`);
+                return resource.duration;
+            }
+            
+            console.log(`Attempt ${attempt}: Duration not available yet or invalid`);
+            
+        } catch (error) {
+            console.error(`Attempt ${attempt}: Error fetching duration:`, error.message);
+            
+            // If it's a not found error, don't retry
+            if (error.http_code === 404) {
+                console.error('Resource not found in Cloudinary');
+                break;
+            }
+        }
+        
+        // Wait before retry with exponential backoff
+        if (attempt < maxRetries) {
+            const delay = initialDelay * Math.pow(1.5, attempt - 1);
+            console.log(`Waiting ${delay}ms before retry...`);
+            await wait(delay);
+        }
+    }
+    
+    console.log('Could not retrieve duration from Cloudinary');
+    return 0;
+};
 
 // POST /api/videos - Takes: video file + thumbnail image + metadata (title, description) → Returns: created video object
 // Uploads new video and its thumbnail to the platform
 const newVideo = asyncHandler(async(req, res) => {
     const { title, description } = req.body;
     const userId = req.user.id;
+    
+    if (!title || !description) {
+        throw new apiError(400, "Title and description are required.");
+    }
+    
     const userDetail = await user.findById(userId);
     if (!userDetail) {
-        throw new apiError(500, "Did not get user.")
+        throw new apiError(500, "User not found.")
     }
 
     const channelDetail = await channel.findById(userDetail.channel);
+    if (!channelDetail) {
+        throw new apiError(500, "Channel not found.")
+    }
 
     // Expecting multipart form-data with fields: video (file), thumbnail (file)
     const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
@@ -103,41 +179,29 @@ const newVideo = asyncHandler(async(req, res) => {
     if (!thumbnailFile) {
         throw new apiError(400, "Thumbnail image is required.");
     }
-
-    let duration = typeof videoFile.duration === 'number' ? videoFile.duration : 0;
-    if (!duration) {
-        const extractPublicIdFromUrl = (url) => {
-            if (!url) return null;
-            const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\.[^\/\.]+$/);
-            return match && match[1] ? match[1] : null;
-        };
-
-        const publicIdCandidate = videoFile.filename || videoFile.public_id || extractPublicIdFromUrl(videoFile.path);
-        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        const fetchDurationWithRetry = async (publicId, attempts = 3, delayMs = 700) => {
-            for (let attempt = 1; attempt <= attempts; attempt++) {
-                try {
-                    const details = await cloudinary.api.resource(publicId, { resource_type: 'video' });
-                    if (details && typeof details.duration === 'number' && details.duration > 0) {
-                        return details.duration;
-                    }
-                } catch (err) {
-                    // ignore and retry
-                }
-                if (attempt < attempts) {
-                    await wait(delayMs);
-                }
-            }
-            return 0;
-        };
-
-        if (publicIdCandidate) {
-            duration = await fetchDurationWithRetry(publicIdCandidate, 3, 700);
+    
+    console.log('Video file object:', JSON.stringify(videoFile, null, 2));
+    
+    let duration = 0;
+    
+    // First, check if duration is already available in the uploaded file
+    if (videoFile.duration && typeof videoFile.duration === 'number' && videoFile.duration > 0) {
+        duration = videoFile.duration;
+        console.log(`Duration from upload: ${duration} seconds`);
+    } else {
+        // Try to get duration from Cloudinary
+        const publicId = getPublicIdFromVideo(videoFile);
+        
+        if (publicId) {
+            console.log(`Attempting to fetch duration for public ID: ${publicId}`);
+            duration = await getDurationFromCloudinary(publicId);
+        } else {
+            console.log('Could not determine public ID for duration fetch');
         }
     }
 
-    const videoUrl = videoFile.path || '';
-    const thumbnailUrl = thumbnailFile.path || '';
+    const videoUrl = videoFile.path || videoFile.secure_url || '';
+    const thumbnailUrl = thumbnailFile.path || thumbnailFile.secure_url || '';
 
     const newVideoInfo = new videos({
         title,
@@ -148,10 +212,20 @@ const newVideo = asyncHandler(async(req, res) => {
         channel: userDetail.channel,
         owner: req.user._id,
         isPublished: true,
-    })
-    console.log(newVideoInfo);
+    });
+    
+    console.log('New video info before save:', {
+        title: newVideoInfo.title,
+        duration: newVideoInfo.duration,
+        videoUrl: newVideoInfo.videoUrl
+    });
 
     await newVideoInfo.save();
+
+    // If duration is still 0, you might want to update it later with a background job
+    if (duration === 0) {
+        console.warn('Video saved with duration 0. Consider implementing a background job to update duration later.');
+    }
 
     res.status(201).json(new apiResponse(201, "New video successfully created!", newVideoInfo))
 })
@@ -161,16 +235,22 @@ const newVideo = asyncHandler(async(req, res) => {
 const updateVideoInfo = asyncHandler(async(req, res) => {
     const videoId = req.params.videoId;
     const {title, description, thumbnailUrl} = req.body;
+    
     if(!title || !description){
-        throw new apiError(400, "Title/description/thumbnailUrl is missing!")
+        throw new apiError(400, "Title and description are required!")
     }
-    const updatedVideo = await videos.findByIdAndUpdate(videoId, {title, description, thumbnailUrl})
+    
+    const updatedVideo = await videos.findByIdAndUpdate(
+        videoId, 
+        {title, description, thumbnailUrl}, 
+        { new: true } // Return updated document
+    );
 
     if(!updatedVideo){
-        throw new apiError(500, "Video information not update!")
+        throw new apiError(500, "Video not found or could not be updated!")
     }
 
-    res.status(200).json(new apiResponse(200, "Video detail updated successfully!"), updatedVideo)
+    res.status(200).json(new apiResponse(200, "Video detail updated successfully!", updatedVideo))
 })
 
 const deleteVideo = asyncHandler(async(req, res) => {
@@ -181,39 +261,55 @@ const deleteVideo = asyncHandler(async(req, res) => {
         throw new apiError(500, "Video not found!")
     }
 
-    // this will delete video from the cloudinary cloud storage.
+    // Extract public ID from video URL for deletion
+    const getPublicIdFromUrl = (url) => {
+        if (!url) return null;
+        const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\.[^\/\.]+$/);
+        return match && match[1] ? match[1] : null;
+    };
+
+    // Delete video from cloudinary cloud storage
     const deleteVideoFromCloudinary = async(publicId) => {
+        if (!publicId) {
+            console.log('No public ID found for deletion');
+            return;
+        }
+        
         try{
-            const result = await cloudinary.uploader.destroy(publicId, {resource_type: 'video'})
-            console.log('Deletion result: ', result)
+            const result = await cloudinary.uploader.destroy(publicId, {resource_type: 'video'});
+            console.log('Deletion result: ', result);
             return result;
         } catch(error){
-            console.error(`Error deleting video: ${error}`)
+            console.error(`Error deleting video: ${error}`);
             throw error;
         }
     }
 
-    deleteVideoFromCloudinary();
+    // Extract public ID and delete from Cloudinary
+    const publicId = getPublicIdFromUrl(deletedVideo.videoUrl);
+    if (publicId) {
+        await deleteVideoFromCloudinary(publicId);
+    }
+
+    res.status(200).json(new apiResponse(200, "Video deleted successfully!", { videoId }));
 })
 
 // POST /api/videos/:videoId/view - Takes: videoId → Returns: updated view count | 
 // Increments video view count
 const incrementViewCount = asyncHandler(async(req, res) => {
     const videoId = req.params.videoId;
-    const video = await videos.findById(videoId);
-    if(!video){
-        throw new apiError(404, "Video not found!")
-    }
+    
     const updatedVideo = await videos.findByIdAndUpdate(
         videoId,
-        {
-            $inc: { views : 1}
-        },
+        { $inc: { views : 1 } },
         { new: true }
     );
 
-    res.status(200).json(new apiResponse(200, "Video view count incremented successfully!", updatedVideo.views));
-})
+    if(!updatedVideo){
+        throw new apiError(404, "Video not found!")
+    }
 
+    res.status(200).json(new apiResponse(200, "Video view count incremented successfully!", { views: updatedVideo.views }));
+})
 
 export {videoInformation, newVideo, updateVideoInfo, deleteVideo, incrementViewCount, allVideos}

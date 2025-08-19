@@ -24,7 +24,6 @@ const videoSchema = new mongoose.Schema({
     type: Number,
     // required: [true, 'Video duration is required'],
     // min: [1, 'Duration must be at least 1 second'],
-    default: null
   },
   views: {
     type: Number,

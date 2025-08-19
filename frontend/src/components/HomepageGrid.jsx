@@ -1,4 +1,12 @@
 import React from 'react'
+import { formatDistanceToNow } from 'date-fns';
+
+function TimeAgo({ timestamp }) {
+  return (
+    <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
+  );
+}
+
 
 function formatDuration(totalSeconds) {
   if (!totalSeconds || Number.isNaN(Number(totalSeconds))) return null;
@@ -34,11 +42,11 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
                   src={video?.thumbnailUrl}
                   alt={video?.title || 'Video thumbnail'}
                 />
-                {durationLabel && (
+                {
                   <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1.5 py-0.5 rounded">
                     {durationLabel}
                   </div>
-                )}
+                }
               </div>
 
               <div className="mt-3 flex gap-3">
@@ -64,15 +72,17 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm md:text-base leading-tight text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                <div className="flex-1 min-w-0 leading-tight">
+                  <h3 className="font-medium text-sm md:text-base leading-tight text-gray-900 line-clamp-2 ">
                     {video?.title || 'Untitled'}
                   </h3>
                   <p className="text-gray-600 text-xs md:text-sm mt-1 hover:text-gray-900 transition-colors">
                     {video?.channelName || ''}
                   </p>
-                  <p className="text-gray-600 text-xs md:text-sm">
-                    {typeof video?.views === 'number' ? `${video.views} views` : ''}
+                  <p className="text-gray-600 text-xs md:text-sm flex gap-2">
+                    {typeof video?.views === 'number' ? `${video.views} views` : ''} 
+                    <div className='text-gray-600' >•</div>
+                    <TimeAgo  timestamp={video.publishedAt} />
                   </p>
                 </div>
               </div>

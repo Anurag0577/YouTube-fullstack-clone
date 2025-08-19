@@ -141,7 +141,7 @@ function Header() {
                     </>
                 ) : (
                     <Button 
-                         className='btn-primary min-h-3.5 pt-1.5 pr-4 pb-1.5 pl-4 rounded-2xl bg-gray-200 flex'
+                         className='btn-primary min-h-3.5 pt-1.5 pr-4 pb-1.5 pl-4 rounded-2xl bg-gray-200 flex cursor-pointer'
                         text="Login" 
                         onClick={handleLogin}
                     />

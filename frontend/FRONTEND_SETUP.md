@@ -1,9 +1,11 @@
 # Frontend Setup Guide
 
 ## Overview
+
 This is the React frontend for the YouTube clone application. It communicates with the backend API for user authentication, file uploads, and other features.
 
 ## Prerequisites
+
 - Node.js (v16 or higher)
 - npm or yarn
 - Backend server running on port 3000
@@ -11,16 +13,19 @@ This is the React frontend for the YouTube clone application. It communicates wi
 ## Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Create environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 3. Configure environment variables in `.env`:
+
 ```env
 VITE_API_URL=http://localhost:3000
 ```
@@ -28,6 +33,7 @@ VITE_API_URL=http://localhost:3000
 ## Development
 
 Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -49,14 +55,16 @@ The frontend uses a centralized API configuration located in `src/config/api.js`
 ## File Upload Features
 
 ### Avatar Upload
+
 - Supported formats: JPEG, JPG, PNG, GIF
 - Maximum size: 5MB
 - Preview functionality included
 - Automatic validation
 
 ### Video Upload
+
 - Supported formats: MP4
-- Maximum size: 100MB
+- Maximum size: 5MB
 - Progress tracking (to be implemented)
 
 ## Troubleshooting
@@ -64,11 +72,13 @@ The frontend uses a centralized API configuration located in `src/config/api.js`
 ### Common Issues
 
 1. **CORS Errors**
+
    - Ensure the backend is running on the correct port
    - Check that CORS is properly configured in the backend
    - Verify the API URL in the environment configuration
 
 2. **File Upload Fails**
+
    - Check file size and format restrictions
    - Ensure the backend upload middleware is properly configured
    - Verify that the uploads directory exists and is writable
@@ -96,8 +106,8 @@ The built files will be in the `dist` directory.
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable       | Description          | Default                 |
+| -------------- | -------------------- | ----------------------- |
 | `VITE_API_URL` | Backend API base URL | `http://localhost:3000` |
 
 ## Notes
@@ -105,4 +115,4 @@ The built files will be in the `dist` directory.
 - The frontend uses Vite for fast development and building
 - Tailwind CSS is used for styling
 - React Router is used for navigation (to be implemented)
-- File uploads support both Cloudinary and local storage 
+- File uploads support both Cloudinary and local storage
