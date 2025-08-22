@@ -14,14 +14,12 @@ function SignUp() {
     const handleAvatarChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Validate file type
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
             if (!validTypes.includes(file.type)) {
                 alert('Please select a valid image file (JPEG, PNG, or GIF)');
                 return;
             }
 
-            // Validate file size (e.g., 5MB limit)
             const maxSize = 5 * 1024 * 1024; // 5MB in bytes
             if (file.size > maxSize) {
                 alert('File size should be less than 5MB');
@@ -30,7 +28,6 @@ function SignUp() {
 
             setSelectedAvatar(file);
             
-            // Create preview
             const reader = new FileReader();
             reader.onload = (e) => {
                 setAvatarPreview(e.target.result);
@@ -42,7 +39,6 @@ function SignUp() {
     const removeAvatar = () => {
         setSelectedAvatar(null);
         setAvatarPreview(null);
-        // Reset the file input
         const fileInput = document.getElementById('avatar-input');
         if (fileInput) {
             fileInput.value = '';

@@ -149,8 +149,8 @@ const getDurationFromCloudinary = async (publicId, maxRetries = 5, initialDelay 
     return 0;
 };
 
-// POST /api/videos - Takes: video file + thumbnail image + metadata (title, description) → Returns: created video object
-// Uploads new video and its thumbnail to the platform
+// POST /api/videos - Takes: video file + metadata (title, description) → Returns: created video object
+// Uploads new video to the platform
 const newVideo = asyncHandler(async(req, res) => {
     const { title, description } = req.body;
     const userId = req.user.id;
@@ -169,15 +169,11 @@ const newVideo = asyncHandler(async(req, res) => {
         throw new apiError(500, "Channel not found.")
     }
 
-    // Expecting multipart form-data with fields: video (file), thumbnail (file)
-    const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
-    const thumbnailFile = req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail[0] ? req.files.thumbnail[0] : null;
+    // Expecting multipart form-data with fields: video (file)
+    const videoFile = req.file; // videoUpload.single('video') puts file in req.file
 
     if (!videoFile) {
         throw new apiError(400, "Video file is required.");
-    }
-    if (!thumbnailFile) {
-        throw new apiError(400, "Thumbnail image is required.");
     }
     
     console.log('Video file object:', JSON.stringify(videoFile, null, 2));
@@ -201,14 +197,12 @@ const newVideo = asyncHandler(async(req, res) => {
     }
 
     const videoUrl = videoFile.path || videoFile.secure_url || '';
-    const thumbnailUrl = thumbnailFile.path || thumbnailFile.secure_url || '';
 
     const newVideoInfo = new videos({
         title,
         description,
         videoUrl,
         duration,
-        thumbnailUrl,
         channel: userDetail.channel,
         owner: req.user._id,
         isPublished: true,

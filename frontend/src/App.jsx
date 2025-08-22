@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import Header from './components/header.jsx'
 import './App.css'
 import Login from './components/Login.jsx'
 import SignUp from './components/SignUp.jsx'
 import Homepage from './components/Homepage.jsx'
 import Dashboard from './components/Dashboard.jsx'
+import {Provider} from 'react-redux'
+import store from '../src/store.js'
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
@@ -32,9 +33,9 @@ function App() {
   ])
 
   return (
-    <>
-      <RouterProvider router={router}/>
-    </>
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   )
 }
 

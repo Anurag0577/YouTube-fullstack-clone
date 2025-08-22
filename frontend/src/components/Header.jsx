@@ -8,16 +8,18 @@ import YouTubeLogo from '../assets/YouTube-Logo.png';
 import { FiPlus } from "react-icons/fi";
 import { FiSettings } from 'react-icons/fi';
 import { TbReportAnalytics } from 'react-icons/tb';
+import { useDispatch, useSelector } from 'react-redux';
+import { show } from '../slice/createVideoPopupShow.js';
 
 
 function Header() {
     const [firstName, setFirstName] = useState('');
     const [username, setUsername] = useState('');
-
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [avatar, setAvatar] = useState('')
     const [isUserLogin, setIsUserLogin] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -55,6 +57,10 @@ function Header() {
         }
     }, []);
 
+    function createVideo(){
+        navigate('/channel-dashboard');
+        dispatch(show());
+    }
     
     function logoutAccount(){
         localStorage.removeItem('accessToken');
@@ -83,8 +89,9 @@ function Header() {
                     <>
                         {/* <p className='pr-4 '>Hi, {firstName}</p> */}
                         <Button 
-                            className="btn-primary min-h-3.5 pt-1.5 pr-3 pb-1.5 pl-3 rounded-2xl bg-gray-200 flex"
+                            className="btn-primary min-h-3.5 cursor-pointer pt-1.5 pr-3 pb-1.5 pl-3 rounded-2xl bg-gray-200 flex"
                             text="Create"
+                            onClick={() => createVideo()}
                         />
                         <Button 
                             className='w-8 h-8 flex items-center justify-center'
