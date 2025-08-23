@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import Uploader from './Uploader.jsx'
+import Uploader from './uploader';
 
 function Dashboard() {
     const createVideoPopup = useSelector(state => state.createVideoPopup.value)
