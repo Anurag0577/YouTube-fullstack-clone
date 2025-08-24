@@ -170,10 +170,14 @@ const newVideo = asyncHandler(async(req, res) => {
     }
 
     // Expecting multipart form-data with fields: video (file), thumbnail (file)
-    const videoFile = req.file;
+    const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
+    const thumbnailFile = req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail[0] ? req.files.thumbnail[0] : null;
 
     if (!videoFile) {
         throw new apiError(400, "Video file is required.");
+    }
+    if (!thumbnailFile) {
+        throw new apiError(400, "Thumbnail image is required.");
     }
     
     console.log('Video file object:', JSON.stringify(videoFile, null, 2));
@@ -197,12 +201,14 @@ const newVideo = asyncHandler(async(req, res) => {
     }
 
     const videoUrl = videoFile.path || videoFile.secure_url || '';
+    const thumbnailUrl = thumbnailFile.path || thumbnailFile.secure_url || '';
 
     const newVideoInfo = new videos({
         title,
         description,
         videoUrl,
         duration,
+        thumbnailUrl,
         channel: userDetail.channel,
         owner: req.user._id,
         isPublished: true,
