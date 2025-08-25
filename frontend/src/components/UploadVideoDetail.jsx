@@ -12,6 +12,18 @@ function UploadVideoDetail({file}){
     const dispatch = useDispatch();
     const [progress, setProgress] = useState(0);
     const [uploadVideoDetail, setUploadVideoDetail] = useState(null);
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const steps = [
+        {
+            name: 'Details',
+        },
+        {
+            name: 'Checks',
+        },
+        {
+            name: 'Visibility',
+        }
+    ]
 
     useEffect(() => {
     const formData = new FormData();
@@ -43,19 +55,34 @@ function UploadVideoDetail({file}){
                 <IoCloseCircleOutline />
             </div>
         </div>
+        <div className='flex justify-between'>
+            {steps.map((step, index) => (
+                <div
+                    className={`flex flex-col justify-center items-center ${index < currentIndex ? 'Completed' : ''} ${index === currentIndex ? 'focused' : ''}`}
+                >
+                    <p>{step.name}</p>
+                    <p className='p-2 rounded-full bg-gray-200'>{index + 1}</p>
+                    
+                </div>
+            ))}
+        </div>
         <div className='flex-grow overflow-auto flex justify-between '>
-            <VideoDetail uploadVideoDetail = {uploadVideoDetail} file={file}></VideoDetail>
+            {currentIndex === 0 && <VideoDetail uploadVideoDetail = {uploadVideoDetail} file={file}></VideoDetail>} 
+            {currentIndex === 1 && <h1>This is check</h1>}
+            {currentIndex === 2 && <h1>this is visibility</h1>}
         </div>
         <div className='mt-2 mb-4 flex justify-between items-center border-t pt-2 border-gray-600'>
             <div className='flex gap-3 item-center'>
                 <HiUpload className='text-2xl text-gray-600'/>
                 <MdOutlineHd className='text-2xl text-gray-600' />
                 <FaRegCheckCircle className='text-2xl text-gray-600' />
-                {progress === 0 && <p className=' text-gray-600'>Upload starting...</p>}
-                {progress > 0 && progress < 100 && <p className=' text-gray-600'>Uploading {progress}%</p>}
-                {progress === 100 && <p className=' text-gray-600'>Video uploaded successfully!</p>}
+                {(progress === 0) && <p className=' text-gray-600'>Upload starting...</p>}
+                {(progress > 0) && progress < 100 && <p className=' text-gray-600'>Uploading {progress}%</p>}
+                {(progress === 100) && <p className=' text-gray-600'>Video uploaded successfully!</p>}
             </div>
-            <div className='bg-black text-white max-w-max px-7 py-2 rounded-full' >Next</div>
+            <div className='bg-black text-white max-w-max px-7 py-2 rounded-full' onClick={() => setCurrentIndex(currentIndex + 1)} >
+                {currentIndex === 2 ? 'Finish' : 'Next'}
+            </div>
         </div>
     </div>
 
