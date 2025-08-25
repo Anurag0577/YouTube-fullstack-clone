@@ -7,7 +7,8 @@ function VideoDetail({uploadVideoDetail, file}){
 
     return (
         <>
-            <div className="flex-grow px-4 py-2">
+        <div className="flex items-start">
+            <div className="flex-grow px-4 py-2 ">
                 {/* video details */}
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Details</h2>
                 <div className="mb-4">
@@ -70,6 +71,7 @@ function VideoDetail({uploadVideoDetail, file}){
                         </div>
                     </>
                 )}
+            </div>
             </div>
         </>
     )
