@@ -1,12 +1,12 @@
 import React from 'react'
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 function TimeAgo({ timestamp }) {
   return (
     <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
   );
 }
-
 
 function formatDuration(totalSeconds) {
   if (!totalSeconds || Number.isNaN(Number(totalSeconds))) return null;
@@ -19,6 +19,8 @@ function formatDuration(totalSeconds) {
 }
 
 function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () => {} }) {
+  const navigate = useNavigate(); // ✅ Move useNavigate here
+
   return (
     <div className="p-4 md:p-6 lg:p-8">
       <div className="grid gap-4 md:gap-6 
@@ -42,16 +44,23 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
                   src={video?.thumbnailUrl}
                   alt={video?.title || 'Video thumbnail'}
                 />
-                {
+                {durationLabel && (
                   <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1.5 py-0.5 rounded">
                     {durationLabel}
                   </div>
-                }
+                )}
               </div>
 
               <div className="mt-3 flex gap-3">
-                <div className="flex-shrink-0">
-                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-colors">
+                {/* ✅ Put onClick on container div, not img */}
+                <div 
+                  className="flex-shrink-0"
+                  onClick={(event) => {
+                    event.stopPropagation(); // ✅ Prevent video click
+                    navigate(`/channel/${video.channel}`);
+                  }}
+                >
+                  <div className="w-9 h-9 md:w-10 md:h-10 cursor-pointer rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-colors">
                     {video?.channelAvatar ? (
                       <img
                         className="w-full h-full object-cover"
@@ -73,16 +82,25 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
                 </div>
 
                 <div className="flex-1 min-w-0 leading-tight">
-                  <h3 className="font-medium text-sm md:text-base leading-tight text-gray-900 line-clamp-2 ">
+                  <h3 className="font-medium text-sm md:text-base leading-tight text-gray-900 line-clamp-2">
                     {video?.title || 'Untitled'}
                   </h3>
-                  <p className="text-gray-600 text-xs md:text-sm mt-1 hover:text-gray-900 transition-colors">
+                  
+                  {/* ✅ Make channel name clickable */}
+                  <p 
+                    className="text-gray-600 text-xs md:text-sm mt-1 hover:text-gray-900 transition-colors cursor-pointer"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      navigate(`/api/channel/${video.channel}`);
+                    }}
+                  >
                     {video?.channelName || ''}
                   </p>
+                  
                   <p className="text-gray-600 text-xs md:text-sm flex gap-2">
                     {typeof video?.views === 'number' ? `${video.views} views` : ''} 
-                    <div className='text-gray-600' >•</div>
-                    <TimeAgo  timestamp={video.publishedAt} />
+                    <div className='text-gray-600'>•</div>
+                    <TimeAgo timestamp={video.publishedAt} />
                   </p>
                 </div>
               </div>
@@ -95,5 +113,3 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
 }
 
 export default HomepageGrid
-
-

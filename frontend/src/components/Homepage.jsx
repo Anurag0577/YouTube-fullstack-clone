@@ -25,6 +25,7 @@ function Homepage() {
         })
         .then(data => {
             setRandomVideos(data.data);
+            console.log("this is random obj", data.data)
             
         })
         
@@ -46,6 +47,7 @@ function Homepage() {
     return (
         <>
             <Header />
+            
             { (randomVideos.length > 0) ? <HomepageGrid videos={randomVideos} currentUserAvatar={user?.avatar} /> : <div className=" w-full h-screen flex justify-center mt-7 bolder text-2xl" >Sorry, No video available!</div> }
             
         </>

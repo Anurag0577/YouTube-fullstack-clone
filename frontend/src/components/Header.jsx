@@ -10,6 +10,7 @@ import { FiSettings } from 'react-icons/fi';
 import { TbReportAnalytics } from 'react-icons/tb';
 import { useDispatch, useSelector } from 'react-redux';
 import { show } from '../slice/createVideoPopupShow.js';
+import { FaBars } from 'react-icons/fa6';
 
 
 function Header() {
@@ -75,6 +76,7 @@ function Header() {
         <div className="headerContainer flex w-full items-center justify-between px-4 py-2">
             {/* Left side - Logo */}
             <div className="flex items-center">
+                <FaBars className='text-xl mr-1'/>
                 <img 
                     className="h-6 m-1 cursor-pointer" 
                     src={YouTubeLogo} 
@@ -137,9 +139,9 @@ function Header() {
                                                 <h1 className='text-xs text-gray-700'>@{username}</h1>
                                             </div>
                                     </div>
-                                    <div className=' flex' onClick={logoutAccount} ><TbLogout className='mt-0.5 mr-1.5 text-xl' /> Log Out</div>
+                                    <div className='flex ' onClick={() => navigate('/channel-dashboard')}><FiSettings className='mt-0.5 mr-1.5 text-xl' />Channel Dashboard</div>
+                                    <div className=' flex mt-3' onClick={logoutAccount} ><TbLogout className='mt-0.5 mr-1.5 text-xl' /> Log Out</div>
                                     <div className='flex mt-3'><FiSettings className='mt-0.5 mr-1.5 text-xl' />Settings</div>
-                                    <div className='flex mt-3' onClick={() => navigate('/channel-dashboard')} ><TbReportAnalytics className='mt-0.5 mr-1.5 text-xl' />Channel Dashboard</div>
 
                                 </div>
                             )}

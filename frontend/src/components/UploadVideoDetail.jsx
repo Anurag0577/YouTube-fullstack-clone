@@ -8,12 +8,19 @@ import { FaRegCheckCircle } from 'react-icons/fa';
 import VideoDetail from './VideoDetail';
 import axios from 'axios';
 import Button from './Button';
+import VideoCheckStatus from './VideoCheckStatus';
+import YouTubePolicyAcceptance from './YouTubePolicyAcceptance ';
 
 function UploadVideoDetail({file}){
     const dispatch = useDispatch();
     const [progress, setProgress] = useState(0);
     const [uploadVideoDetail, setUploadVideoDetail] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    const [videoTitle, setVideoTitle] = useState(file.name)
+    const [videoDescription, setVideoDescription] = useState('')
+    const [uploadedThumbnailDetail, setUploadedThumbnailDetail] = useState(null)
+    const [thumbnailImg, setThumbnailImg] = useState(null)
     
     const steps = [
         {
@@ -23,7 +30,7 @@ function UploadVideoDetail({file}){
             name: 'Checks'
         },
         {
-            name: 'Visibility'
+            name: 'Policy'
         }
     ];
 
@@ -42,11 +49,50 @@ function UploadVideoDetail({file}){
         })
         .then((res) => {
             setUploadVideoDetail(res.data);
+            console.log("this is cloudinary obj", res)
         })
         .catch(error => {
             console.error(error);
         });
     }, [file]);
+
+    const videoUploadHandler = async() => {
+
+        const accessToken = localStorage.getItem('accessToken');
+        try {
+            console.log('upload video ', uploadVideoDetail)
+            await axios.post('http://localhost:3000/api/videos/', {
+            title: videoTitle,
+            description: videoDescription,
+            videoUrl: uploadVideoDetail?.data?.url,
+            duration: uploadVideoDetail?.data?.duration,
+            thumbnailUrl: uploadedThumbnailDetail?.data.url
+            }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            }
+            })
+            .then((res) => {
+            // Handle success, e.g. show a success message or redirect
+            console.log('Video details saved:', res.data);
+            dispatch(hide());
+            })
+            .catch((err) => {
+            // Handle error, e.g. show an error message
+            if (err?.response?.status === 401) {
+                console.error('Unauthorized: Invalid or expired token');
+                // Optional: clear tokens so user can re-auth
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+            }
+            console.error('Error saving video details:', err);
+            });
+        } catch (err) {
+            // Handle unexpected errors
+            console.error('Unexpected error:', err);
+        }
+    }
 
     const getStepStatus = (index) => {
         if (index < currentIndex) return 'completed';
@@ -76,7 +122,7 @@ function UploadVideoDetail({file}){
                                     w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold
                                     transition-all duration-300 ease-in-out transform
                                     ${getStepStatus(index) === 'completed' 
-                                        ? 'bg-green-500 text-white scale-110' 
+                                        ? 'bg-black text-white scale-110' 
                                         : getStepStatus(index) === 'active'
                                         ? 'bg-black text-white scale-110 shadow-lg shadow-blue-500/30'
                                         : 'bg-gray-200 text-gray-500'
@@ -97,7 +143,7 @@ function UploadVideoDetail({file}){
                                     ${getStepStatus(index) === 'active' 
                                         ? 'text-black' 
                                         : getStepStatus(index) === 'completed'
-                                        ? 'text-green-600'
+                                        ? 'text-black'
                                         : 'text-gray-500'
                                     }
                                 `}
@@ -122,9 +168,20 @@ function UploadVideoDetail({file}){
             </div>
 
             <div className='overflow-auto flex-1 '>
-            {currentIndex === 0 && <VideoDetail uploadVideoDetail = {uploadVideoDetail} file={file} className></VideoDetail>} 
-            {currentIndex === 1 && <h1>This is check</h1>}
-            {currentIndex === 2 && <h1>this is visibility</h1>}
+            {currentIndex === 0 && 
+                <VideoDetail 
+                uploadVideoDetail = {uploadVideoDetail} 
+                file={file} 
+                videoTitle={videoTitle}
+                videoDescription={videoDescription}
+                uploadedThumbnailDetail={uploadedThumbnailDetail}
+                setThumbnailImg = {setThumbnailImg}
+                setVideoTitle = {setVideoTitle}
+                setVideoDescription = {setVideoDescription}
+                setUploadedThumbnailDetail = {setUploadedThumbnailDetail}
+                ></VideoDetail>} 
+            {currentIndex === 1 && <VideoCheckStatus />}
+            {currentIndex === 2 && <YouTubePolicyAcceptance/>}
             </div>
         <div className='max-h-[20%] mb-4 flex justify-between items-center border-t pt-2 border-gray-600'>
             <div className='flex gap-3 item-center'>
@@ -135,8 +192,17 @@ function UploadVideoDetail({file}){
                 {(progress > 0) && progress < 100 && <p className=' text-gray-600'>Uploading {progress}%</p>}
                 {(progress === 100) && <p className=' text-gray-600'>Video uploaded successfully!</p>}
             </div>
-            <div className='bg-black text-white max-w-max px-7 py-2 rounded-full' onClick={() => setCurrentIndex(currentIndex + 1)} >
-                {currentIndex === 2 ? 'Finish' : 'Next'}
+            <div
+                className='bg-black text-white max-w-max px-7 py-2 rounded-full cursor-pointer'
+                onClick={
+                    currentIndex === 2
+                        ? () => {
+                            videoUploadHandler();
+                        }
+                        : () => setCurrentIndex(currentIndex + 1)
+                }
+            >
+                {currentIndex === 2 ? 'Create Video' : 'Next'}
             </div>
         </div>
 

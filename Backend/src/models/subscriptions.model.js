@@ -20,6 +20,6 @@ const subscriptionSchema = new mongoose.Schema({
 });
 
 
-const subscriptions = mongoose.model('subscriptions' , subscriptionsSchema)
+const subscriptions = mongoose.model('subscriptions' , subscriptionSchema)
 
 export default subscriptions

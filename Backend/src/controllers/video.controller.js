@@ -49,6 +49,7 @@ const allVideos = asyncHandler(async (req, res) => {
                 likes: 1,
                 dislikes: 1,
                 publishedAt: 1,
+                channel: 1,
                 // Prefer channel name/avatar; fall back to owner's
                 channelName: {
                     $ifNull: ['$channelDoc.channelName', '$ownerDoc.username']
@@ -151,57 +152,45 @@ const getDurationFromCloudinary = async (publicId, maxRetries = 5, initialDelay 
 
 // POST /api/videos - Takes: video file + thumbnail image + metadata (title, description) → Returns: created video object
 // Uploads new video and its thumbnail to the platform
+// New : dont need to take any input like file and thumbnail form the middleware all the data you will recieve via body
 const newVideo = asyncHandler(async(req, res) => {
-    const { title, description } = req.body;
+    const { title, description, videoUrl, duration, thumbnailUrl} = req.body;
     const userId = req.user.id;
     
-    if (!title || !description) {
-        throw new apiError(400, "Title and description are required.");
-    }
     
     const userDetail = await user.findById(userId);
-    if (!userDetail) {
-        throw new apiError(500, "User not found.")
-    }
+
 
     const channelDetail = await channel.findById(userDetail.channel);
-    if (!channelDetail) {
-        throw new apiError(500, "Channel not found.")
-    }
 
-    // Expecting multipart form-data with fields: video (file), thumbnail (file)
-    const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
-    const thumbnailFile = req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail[0] ? req.files.thumbnail[0] : null;
 
-    if (!videoFile) {
-        throw new apiError(400, "Video file is required.");
-    }
-    if (!thumbnailFile) {
-        throw new apiError(400, "Thumbnail image is required.");
-    }
+    // // Expecting multipart form-data with fields: video (file), thumbnail (file)
+    // const videoFile = req.files && Array.isArray(req.files.video) && req.files.video[0] ? req.files.video[0] : null;
+    // const thumbnailFile = req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail[0] ? req.files.thumbnail[0] : null;
+
     
-    console.log('Video file object:', JSON.stringify(videoFile, null, 2));
+    // console.log('Video file object:', JSON.stringify(videoFile, null, 2));
     
-    let duration = 0;
+    // let duration = 0;
     
-    // First, check if duration is already available in the uploaded file
-    if (videoFile.duration && typeof videoFile.duration === 'number' && videoFile.duration > 0) {
-        duration = videoFile.duration;
-        console.log(`Duration from upload: ${duration} seconds`);
-    } else {
-        // Try to get duration from Cloudinary
-        const publicId = getPublicIdFromVideo(videoFile);
+    // // First, check if duration is already available in the uploaded file
+    // if (videoFile.duration && typeof videoFile.duration === 'number' && videoFile.duration > 0) {
+    //     duration = videoFile.duration;
+    //     console.log(`Duration from upload: ${duration} seconds`);
+    // } else {
+    //     // Try to get duration from Cloudinary
+    //     const publicId = getPublicIdFromVideo(videoFile);
         
-        if (publicId) {
-            console.log(`Attempting to fetch duration for public ID: ${publicId}`);
-            duration = await getDurationFromCloudinary(publicId);
-        } else {
-            console.log('Could not determine public ID for duration fetch');
-        }
-    }
+    //     if (publicId) {
+    //         console.log(`Attempting to fetch duration for public ID: ${publicId}`);
+    //         duration = await getDurationFromCloudinary(publicId);
+    //     } else {
+    //         console.log('Could not determine public ID for duration fetch');
+    //     }
+    // }
 
-    const videoUrl = videoFile.path || videoFile.secure_url || '';
-    const thumbnailUrl = thumbnailFile.path || thumbnailFile.secure_url || '';
+    // const videoUrl = videoFile.path || videoFile.secure_url || '';
+    // const thumbnailUrl = thumbnailFile.path || thumbnailFile.secure_url || '';
 
     const newVideoInfo = new videos({
         title,
@@ -217,7 +206,8 @@ const newVideo = asyncHandler(async(req, res) => {
     console.log('New video info before save:', {
         title: newVideoInfo.title,
         duration: newVideoInfo.duration,
-        videoUrl: newVideoInfo.videoUrl
+        videoUrl: newVideoInfo.videoUrl,
+        thumbnailUrl: newVideoInfo.thumbnailUrl
     });
 
     await newVideoInfo.save();

@@ -11,6 +11,7 @@ import store from '../src/store.js'
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
+import ChannelPage from './components/ChannelPage.jsx'
 
 function App() {
   const router = createBrowserRouter([
@@ -29,6 +30,10 @@ function App() {
     {
       path: '/channel-dashboard',
       element: <Dashboard/>
+    },
+    {
+      path: "/channel/:channelId",
+      element: <ChannelPage/>
     }
   ])
 

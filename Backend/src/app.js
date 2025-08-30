@@ -10,6 +10,7 @@ import engagementRoutes from './routes/engagementRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import channelRoutes from './routes/channelRoutes.js'
+import subscriptionRoutes from './routes/subscriptionRoutes.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -42,6 +43,7 @@ app.use('/api/engagement', engagementRoutes)
 app.use('/api/comments', commentRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/channel', channelRoutes)
+app.use('/api/subscription', subscriptionRoutes)
 // Move error handler to the end
 app.use(errorHandler)
 
