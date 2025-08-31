@@ -246,9 +246,10 @@ const updateVideoInfo = asyncHandler(async(req, res) => {
 const deleteVideo = asyncHandler(async(req, res) => {
     const videoId = req.params.videoId;
 
-    const deletedVideo = await videos.findByIdAndDelete(videoId);
-    if(!deletedVideo){
-        throw new apiError(500, "Video not found!")
+    // First check if video exists
+    const video = await videos.findById(videoId);
+    if(!video){
+        throw new apiError(404, "Video not found!")
     }
 
     // Extract public ID from video URL for deletion
@@ -270,18 +271,27 @@ const deleteVideo = asyncHandler(async(req, res) => {
             console.log('Deletion result: ', result);
             return result;
         } catch(error){
-            console.error(`Error deleting video: ${error}`);
-            throw error;
+            console.error(`Error deleting video from Cloudinary: ${error}`);
+            throw new apiError(500, "Failed to delete video from cloud storage");
         }
     }
 
-    // Extract public ID and delete from Cloudinary
-    const publicId = getPublicIdFromUrl(deletedVideo.videoUrl);
-    if (publicId) {
-        await deleteVideoFromCloudinary(publicId);
-    }
+    try {
+        // Extract public ID and delete from Cloudinary first
+        const publicId = getPublicIdFromUrl(video.videoUrl);
+        if (publicId) {
+            await deleteVideoFromCloudinary(publicId);
+        }
 
-    res.status(200).json(new apiResponse(200, "Video deleted successfully!", { videoId }));
+        // Then delete from database
+        await videos.findByIdAndDelete(videoId);
+
+        res.status(200).json(new apiResponse(200, "Video deleted successfully!", { videoId }));
+    } catch (error) {
+        // If Cloudinary deletion fails, don't delete from database
+        console.error('Error in video deletion process:', error);
+        throw error;
+    }
 })
 
 // POST /api/videos/:videoId/view - Takes: videoId → Returns: updated view count | 
