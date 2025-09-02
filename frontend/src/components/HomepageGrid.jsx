@@ -18,8 +18,13 @@ function formatDuration(totalSeconds) {
   return hrs > 0 ? `${hrs}:${two(mins)}:${two(secs)}` : `${mins}:${two(secs)}`;
 }
 
-function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () => {} }) {
-  const navigate = useNavigate(); // ✅ Move useNavigate here
+function HomepageGrid({ videos = [], currentUserAvatar = null }) {
+  const navigate = useNavigate(); 
+
+  function videoClickHandler(videoDetail){
+    const vidId = videoDetail?._id;
+    navigate(`/videos/player/${vidId}`)
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8">
@@ -36,7 +41,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null, onCardClick = () 
             <div 
               key={video._id}
               className="video-card group cursor-pointer"
-              onClick={() => onCardClick(video)}
+              onClick={() => videoClickHandler(video)}
             >
               <div className="relative overflow-hidden rounded-xl">
                 <img

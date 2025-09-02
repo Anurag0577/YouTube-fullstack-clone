@@ -8,7 +8,7 @@ import Homepage from './components/Homepage.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import {Provider} from 'react-redux'
 import store from '../src/store.js'
-
+import VideoPlayerPage from './components/VideoPlayerPage.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
 import ChannelPage from './components/ChannelPage.jsx'
@@ -34,6 +34,10 @@ function App() {
     {
       path: "/channel/:channelId",
       element: <ChannelPage/>
+    },
+    {
+      path: "/videos/player/:vidId",
+      element: <VideoPlayerPage/>
     }
   ])
 
