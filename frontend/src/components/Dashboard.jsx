@@ -3,14 +3,18 @@ import Uploader from "./uploader";
 import { useEffect, useState } from "react";
 import Headers from '../components/Header.jsx'
 import { HiOutlineVideoCamera } from 'react-icons/hi2';
+import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { IoAnalyticsSharp } from 'react-icons/io5';
 import {jwtDecode} from 'jwt-decode';
 import { AiOutlineEdit } from 'react-icons/ai';
 import { AiOutlineDelete } from 'react-icons/ai';
+import EditPopup from "./EditPopup.jsx";
 import axios from "axios";
 
 function Dashboard() {
   const [videos, setVideos] = useState([]);
+  const [videoId, setVideoId] = useState('')
+  const [isEditPopOpen, setIsEditPopOpen] = useState(false);
   const isSidebarOpen = useSelector((state) => state.sidebarHandler.value)
   const createVideoPopup = useSelector(
     (state) => state.createVideoPopup.value
@@ -52,6 +56,15 @@ function Dashboard() {
     channelDetail();
    }, [])
 
+
+   const videoEditHandler = (clickedVideoDetail) => {
+    setVideoId(clickedVideoDetail);
+    if(isEditPopOpen){
+      setIsEditPopOpen(false)
+    } else{
+      setIsEditPopOpen(true)
+    }
+   }
 
    const videoDeleteHandler = async(currentVideoId) => {
     const accessToken = localStorage.getItem('accessToken');
@@ -137,7 +150,7 @@ function Dashboard() {
                     <div className="h-[60px] aspect-video "><img className="h-full w-full rounded-[5px] " src={video.thumbnailUrl}></img></div>
                     <h1 className="flex-1">{video.title}</h1>
                     <div className={"flex"} >
-                      <div className="text-2xl py-2 px-5 mr-5 hover:bg-black hover:text-white hover:rounded-[5px]"><AiOutlineEdit/></div>
+                      <div className="text-2xl py-2 px-5 mr-5 hover:bg-black hover:text-white hover:rounded-[5px]" onClick={() => (videoEditHandler(video))}><AiOutlineEdit/></div>
                       <div className="text-2xl py-2 px-5 mr-5 hover:bg-black hover:text-white hover:rounded-[5px]" onClick={() => (videoDeleteHandler(video._id))}><AiOutlineDelete/></div>
                     </div>
                   </div>
@@ -145,10 +158,6 @@ function Dashboard() {
           </div>   
         </div>
         </div>
-        
-        
-        
-
         {/* SideBar */}
         
       </div>
@@ -160,6 +169,18 @@ function Dashboard() {
           </div>
         </div>
       )}
+      {isEditPopOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
+          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-2 md:p-6 transition-all h-[90%]">
+            <div className="w-full flex justify-between mb-5">
+              <h1 className="text-2xl font-bold">Update Video Details</h1>
+              <AiOutlineCloseCircle className="text-3xl text-right right-0 cursor-pointer hover:scale-105" onClick={() => setIsEditPopOpen(false)}/>
+            </div>
+            <EditPopup videoId = {videoId}/>
+          </div>
+        </div>
+      )}
+      
     </>
   );
 }
