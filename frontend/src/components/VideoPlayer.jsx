@@ -3,9 +3,11 @@ import cloudinary from "cloudinary-video-player";
 import "cloudinary-video-player/cld-video-player.min.css";
 
 const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "", ...props }) => {
-  const cloudinaryRef = useRef();
+  const containerRef = useRef();
   const playerRef = useRef();
+  const cloudinaryRef = useRef();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Don't proceed if no publicId
@@ -14,31 +16,42 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
       return;
     }
 
-    // Make sure the element is in the DOM before initializing
-    const initializePlayer = () => {
-      if (!playerRef.current) {
-        console.log("Player ref not available yet");
-        return;
-      }
-
-      // Check if element is in DOM
-      if (!document.contains(playerRef.current)) {
-        console.log("Element not in DOM yet, retrying...");
-        setTimeout(initializePlayer, 100);
+    let isMounted = true;
+    
+    const initializePlayer = async () => {
+      if (!containerRef.current || !isMounted) {
         return;
       }
 
       try {
-        // Clean up existing player if it exists
-        if (cloudinaryRef.current?.player) {
-          cloudinaryRef.current.player.dispose();
+        // Clean up any existing player
+        if (cloudinaryRef.current) {
+          try {
+            cloudinaryRef.current.dispose();
+          } catch (e) {
+            console.log("Error disposing existing player:", e);
+          }
         }
+
+        // Create a fresh video element
+        const videoElement = document.createElement('video');
+        videoElement.id = id || `cloudinary-player-${Date.now()}`;
+        videoElement.className = 'cld-video-player cld-fluid w-full h-full';
+        videoElement.style.minHeight = '300px';
+        videoElement.style.backgroundColor = '#000';
+        videoElement.controls = false;
+
+        // Clear container and add new video element
+        containerRef.current.innerHTML = '';
+        containerRef.current.appendChild(videoElement);
+
+        // Store reference to the video element
+        playerRef.current = videoElement;
 
         console.log("Initializing Cloudinary player with publicId:", publicId);
         
-        cloudinaryRef.current = cloudinary;
-
-        const player = cloudinaryRef.current.videoPlayer(playerRef.current, {
+        // Initialize Cloudinary player
+        const player = cloudinary.videoPlayer(videoElement, {
           cloud_name: "dywh2ogcw",
           secure: true,
           controls: true,
@@ -53,21 +66,18 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
           ...playerConfig,
         });
 
-        // Store player reference for cleanup
-        cloudinaryRef.current.player = player;
-        setIsInitialized(true);
+        // Store player reference
+        cloudinaryRef.current = player;
 
-        // Check if publicId is a full URL or just a public ID
+        // Set video source
         if (publicId.startsWith("http")) {
           console.log("Using direct URL:", publicId);
-          // For full URLs, use them directly
           player.source(publicId, {
             sourceTypes: ["mp4"],
             ...sourceConfig,
           });
         } else {
           console.log("Using Cloudinary publicId:", publicId);
-          // For Cloudinary public IDs
           player.source({
             publicId: publicId,
             sourceTypes: ["mp4"],
@@ -79,17 +89,23 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
           });
         }
 
-        // Add error handling
+        // Add event listeners
         player.on('error', (error) => {
           console.error('Video player error:', error);
+          setError('Failed to load video');
         });
 
         player.on('loadstart', () => {
           console.log('Video loading started');
+          setError(null);
         });
 
         player.on('canplay', () => {
           console.log('Video can start playing');
+          if (isMounted) {
+            setIsInitialized(true);
+            setError(null);
+          }
         });
 
         player.on('loadeddata', () => {
@@ -98,47 +114,71 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
 
       } catch (error) {
         console.error('Error initializing Cloudinary player:', error);
+        if (isMounted) {
+          setError('Failed to initialize video player');
+        }
       }
     };
 
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(initializePlayer, 50);
+    // Initialize with a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(initializePlayer, 100);
 
     // Cleanup function
     return () => {
+      isMounted = false;
       clearTimeout(timeoutId);
-      setIsInitialized(false);
-      if (cloudinaryRef.current?.player) {
+      
+      if (cloudinaryRef.current) {
         try {
-          cloudinaryRef.current.player.dispose();
-          cloudinaryRef.current.player = null;
+          cloudinaryRef.current.dispose();
         } catch (error) {
           console.log("Error disposing player:", error);
         }
       }
+      
+      // Clear the container to prevent React conflicts
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+      
+      setIsInitialized(false);
+      setError(null);
     };
-  }, [publicId, playerConfig, sourceConfig]);
+  }, [publicId, playerConfig, sourceConfig, id]);
+
+  if (error) {
+    return (
+      <div className={`video-player-wrapper w-full h-full bg-gray-800 flex items-center justify-center ${className}`}>
+        <div className="text-center text-white">
+          <div className="text-red-400 mb-2">⚠️</div>
+          <p className="text-sm">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="video-player-wrapper w-full h-full relative">
-      {!isInitialized && (
-        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center text-white">
+    <div className={`video-player-wrapper w-full h-full relative ${className}`}>
+      {!isInitialized && !error && (
+        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center text-white z-10">
           <div className="text-center">
             <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p>Loading video player...</p>
+            <p className="text-sm">Loading video player...</p>
           </div>
         </div>
       )}
-      <video
-        ref={playerRef}
-        id={id}
-        className={`cld-video-player cld-fluid w-full h-full object-cover ${className}`}
-        style={{ 
-          minHeight: '300px',
-          backgroundColor: '#000',
-          display: 'block'
-        }}
-        controls={false} // Let Cloudinary handle controls
+      
+      {/* Container that will hold the dynamically created video element */}
+      <div 
+        ref={containerRef}
+        className="w-full h-full"
+        style={{ minHeight: '300px' }}
         {...props}
       />
     </div>
