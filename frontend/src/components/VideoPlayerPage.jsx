@@ -10,12 +10,15 @@ import { BsShare } from 'react-icons/bs';
 function VideoPlayerPage() {
   const [videoDetail, setVideoDetail] = useState({});
   const [channelDetail, setChannelDetail] = useState({});
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDislikes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const { vidId } = useParams();
 
   useEffect(() => {
+    // fetch the clicked video details
     const fetchVideoDetails = () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -41,6 +44,8 @@ function VideoPlayerPage() {
       }
     };
 
+
+    // fetch details of a channel from which the current video belong
     const channelDetails = () => {
       try {
         const res = axios.get(`http://localhost:3000/api/channel/${videoDetail.channel}`, {
@@ -60,9 +65,11 @@ function VideoPlayerPage() {
                 "Authorization" : `Bearer ${accessToken}`
               }
             })
-            .then(res => {
+            .then(subscriptionRes => {
+              console.log('this is demo for testiing')
               if(res.data.success) {
-                isSubscribed(res.data.data.isSubscribed)
+                setIsSubscribed(subscriptionRes.data.data.isSubscribed)
+                console.log('Subscription status:', subscriptionRes.data.data);
               }
             })
           } catch(err){
@@ -80,35 +87,111 @@ function VideoPlayerPage() {
       fetchVideoDetails();
       channelDetails();
     }
-  }, [vidId, videoDetail.channel]); // Combined dependencies from both useEffect hooks
+  }, [vidId, videoDetail.channel, isSubscribed , likes, dislikes]); // Combined dependencies from both useEffect hooks
 
-  // Checking the subscription status
+ 
 
-  // const handleSubscribe = async() => {
-  //   const accessToken = localStorage.getItem('accessToken');
-  //   await axios.put("http://localhost:3000/api/subscription/subscribe", {
-  //     channelId: videoDetail.channelId
-  //   },
-  //   {
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       "Authorization": `Bearer ${accessToken}`
-  //     }
-  //   })
-  //   .then((response) => {
-  //     if(response.data.success){
-  //       setIsSubscribed(true);
-  //       console.log('Subscription response:', response.data.data);
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     console.error('Error subscribing to channel:', error);
-  //   });
-  // }
-
-  const handleSubscription = () => {
+  const handleSubscribe = async() => {
+    try{
+      const accessToken = localStorage.getItem('accessToken') // get the accessTOKEN 
+    await axios.post('http://localhost:3000/api/subscription/subscribe',{
+      channelId : videoDetail.channel // passing the channel Id to backend
+    },
+    {
+      headers: {
+        "Content-Type" : 'application/json',
+        "Authorization" : `Bearer ${accessToken}`
+      }
+    }
+  )
+  .then(res => {
+    if(res.data.success){
+      setIsSubscribed(true)
+      console.log('Channel Subscribed')
+    }
+  })
+    } catch(err){
+      console.log('error', err)
+    }
     
   }
+
+  const handleUnsubscribe = async() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const unsubscribing = await axios.post('http://localhost:3000/api/subscription/unsubscribe', {
+      channelId: videoDetail.channel
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    }
+  )
+  if(unsubscribing.data.success){
+    setIsSubscribed(false);
+    console.log('Channel unsubscribed!')
+  }
+  }
+
+  const handleSubscription = () => {
+    (isSubscribed ? handleUnsubscribe() : handleSubscribe());
+  }
+
+
+  // LIKE A VIDEO
+  const likeHandler = async() => {
+  try {
+    const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseLike`, {}, {
+      headers: {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    if(response.data.ok){
+      console.log('Video liked successfully!');
+      setLikes(likes + 1);
+    }
+
+  } catch (err) {
+    console.log(err);
+    // Check if it's a 400 error (already liked)
+    if (err.response && err.response.status === 400) {
+      alert(err.response.data.message || "You have already liked this video.");
+    } else {
+      alert("An error occurred while liking the video.");
+    }
+  }
+}
+
+  // DISLIKE THE CURRENT VIDEO
+  const dislikeHandler = async() => {
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      throw new Error("No access token found");
+    }
+    const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseDislike`, {}, {
+      headers: {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+    if(response.data.ok){
+      console.log('Video disliked successfully!');
+      setDislikes(dislikes + 1);
+    }
+
+  } catch (err) {
+    console.log(err);
+    // Check if it's a 400 error (already disliked)
+    if (err.response && err.response.status === 400) {
+      alert(err.response.data.message || "You have already disliked this video.");
+    } else {
+      alert("An error occurred while disliking the video.");
+    }
+  }
+} 
 
   return (
     <>
@@ -163,11 +246,22 @@ function VideoPlayerPage() {
                     </div>
                     
                   </div>
-                  <div className="channel-subscription rounded-full hover:scale-105 cursor-pointer" onClick={handleSubscription}><span className={`py-3 px-5 rounded-full ${isSubscribed ? 'bg-red-500 text-white' : 'bg-black text-white'} font-medium`}>{isSubscribed ? 'Unsubscribe' : 'Subscribe'}</span></div>
+                  <div className="channel-subscription rounded-full hover:scale-105 cursor-pointer" onClick={handleSubscription}><span className={`py-3 px-5 rounded-full ${isSubscribed ? 'bg-gray-100 text-black' : ' bg-black text-white'} font-medium`}>{isSubscribed ? 'Subscribed' : 'Subscribe'}</span></div>
                 </div>
                 <div className="right-side flex">
-                  <div className="channel-subscription"><span className="py-3 px-5 rounded-l-full bg-gray-200 flex items-center gap-x-3"><AiOutlineLike className="text-2xl"/> 900k</span></div>
-                  <div className="channel-subscription text-xl "><span className="py-3  px-5 rounded-r-full flex items-center gap-x-3 border-l-2  bg-gray-200  "><AiOutlineDislike className="text-2xl" /></span></div>
+                  {/* like button */}
+                  <div className="channel-engagement"><span className="py-3 px-5 rounded-l-full bg-gray-200 flex items-center gap-x-3" onClick={likeHandler}><AiOutlineLike className="text-2xl"/>{videoDetail.likes || 0}</span></div>
+
+                  {/* Dislike button */}
+                  <div className="channel-engagement text-xl">
+                    <span 
+                      className="py-3 px-5 rounded-r-full flex items-center gap-x-3 border-l-2 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-colors" 
+                      onClick={dislikeHandler}
+                    >
+                      <AiOutlineDislike className="text-2xl" />
+                      {videoDetail.dislikes || 0}
+                    </span>
+                  </div>
                   <div className="py-3 ml-5 px-5 rounded-full flex items-center gap-x-2  bg-gray-200 "><BsShare className="text-2xl"/>Share</div>
                 </div>
               </div>
