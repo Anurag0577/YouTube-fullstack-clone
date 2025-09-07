@@ -1,6 +1,6 @@
 import VideoPlayer from "./VideoPlayer.jsx";
 import Headers from "./Header.jsx"
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from 'axios'
 import { useParams } from "react-router-dom";
 import { AiOutlineDislike } from 'react-icons/ai';
@@ -16,8 +16,28 @@ function VideoPlayerPage() {
   const [error, setError] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const { vidId } = useParams();
+  const hasFetched = useRef(false);
+
+  const fetchChannelDetails = async(channelId) => {
+        try{
+            await axios.get(`http://localhost:3000/api/channel/${channelId}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        console.log(res.data.data);
+        setChannelDetail(res.data.data);
+      })
+        } catch(err){
+      console.log('Error in fetching channel details', err)
+    }
+  }
 
   useEffect(() => {
+    if (hasFetched.current) return; // Prevent duplicate calls
+    hasFetched.current = true;
+
     // fetch the clicked video details
     const fetchVideoDetails = () => {
       try {
@@ -99,22 +119,8 @@ function VideoPlayerPage() {
 
 // seperate useEffect to fetch channel details when videoDetail.channel changes
   useEffect(()=> {
-      const fetchChannelDetails = async() => {
-        try{
-            await axios.get(`http://localhost:3000/api/channel/${videoDetail.channel}`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => {
-        console.log(res.data.data);
-        setChannelDetail(res.data.data);
-      })
-        } catch(err){
-      console.log('Error in fetching channel details', err)
-    }
-    fetchChannelDetails();
-  }}, [videoDetail.channel])
+    if (videoDetail.channel) fetchChannelDetails(videoDetail.channel);
+      }, [videoDetail.channel])
 
   const handleSubscribe = async() => {
     try{
@@ -273,7 +279,7 @@ function VideoPlayerPage() {
                 </div>
                 <div className="right-side flex justify-centern items-center">
                   {/* like button */}
-                  <div className="channel-engagement"><span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer" onClick={likeHandler}><AiOutlineLike className="text-2xl"/>{videoDetail.likes || 0}</span></div>
+                  <div className="channel-engagement"><span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer" onClick={likeHandler}><AiOutlineLike className="text-2xl"/>{likes || 0}</span></div>
 
                   {/* Dislike button */}
                   <div className="channel-engagement ">
@@ -282,7 +288,7 @@ function VideoPlayerPage() {
                       onClick={dislikeHandler}
                     >
                       <AiOutlineDislike className="text-2xl" />
-                      {videoDetail.dislikes || 0}
+                      {dislikes || 0}
                     </span> 
                   </div>
                   <div className="py-2 ml-5 px-4 rounded-full flex items-center gap-x-2  bg-gray-100 font-semibold hover:bg-gray-300 cursor-pointer"><BsShare className="text-xl"/>Share</div>

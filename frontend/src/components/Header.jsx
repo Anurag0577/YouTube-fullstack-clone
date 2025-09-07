@@ -30,7 +30,6 @@ function Header() {
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
-        console.log(parsedUser);
 
         if (parsedUser && parsedUser.firstName) {
           setIsUserLogin(true);

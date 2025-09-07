@@ -104,7 +104,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
                   
                   <p className="text-gray-600 text-xs md:text-sm flex gap-2">
                     {typeof video?.views === 'number' ? `${video.views} views` : ''} 
-                    <div className='text-gray-600'>•</div>
+                    <span className='text-gray-600'>•</span>
                     <TimeAgo timestamp={video.publishedAt} />
                   </p>
                 </div>

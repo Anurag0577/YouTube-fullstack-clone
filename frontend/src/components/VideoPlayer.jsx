@@ -96,7 +96,6 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
         });
 
         player.on('loadstart', () => {
-          console.log('Video loading started');
           setError(null);
         });
 

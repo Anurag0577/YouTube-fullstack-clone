@@ -11,7 +11,6 @@ function Homepage() {
     const [randomVideos, setRandomVideos] = useState([]);
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const isSidebarOpen = useSelector((state) => state.sidebarHandler.value);
-    console.log("isSidebarOpen", isSidebarOpen)
 
 
     useEffect(() => {
@@ -31,8 +30,6 @@ function Homepage() {
         })
         .then(data => {
             setRandomVideos(data.data);
-            console.log("this is random obj", data.data)
-            
         })
         
     }, [])
