@@ -35,6 +35,18 @@ function VideoPlayerPage() {
         .then(response => {
             console.log('Video details response:', response.data.data);
           setVideoDetail(response.data.data || {});
+          try {
+            axios.post(`http://localhost:3000/api/videos/${vidId}/view`, {}, {
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(res => {
+              console.log('view increased successfully!')
+            })
+          } catch (err) {
+            console.log(err)
+          }
         })
       } catch (err) {
         console.error('Error fetching video details:', err);
@@ -45,51 +57,64 @@ function VideoPlayerPage() {
     };
 
 
-    // fetch details of a channel from which the current video belong
-    const channelDetails = () => {
-      try {
-        const res = axios.get(`http://localhost:3000/api/channel/${videoDetail.channel}`, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(res => {
-          console.log(res.data.data);
-          setChannelDetail(res.data.data);
+    // // fetch details of a channel from which the current video belong
+    // const channelDetails = () => {
+    //   try {
+    //     const res = axios.get(`http://localhost:3000/api/channel/${videoDetail.channel}`, {
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       }
+    //     })
+    //     .then(res => {
+    //       console.log(res.data.data);
+    //       setChannelDetail(res.data.data);
 
-          try{
-            const accessToken = localStorage.getItem('accessToken');
-            axios.get(`http://localhost:3000/api/subscription/status/${videoDetail.channel}`,{
-              headers: {
-                "Content-Type" : 'application/json',
-                "Authorization" : `Bearer ${accessToken}`
-              }
-            })
-            .then(subscriptionRes => {
-              console.log('this is demo for testiing')
-              if(res.data.success) {
-                setIsSubscribed(subscriptionRes.data.data.isSubscribed)
-                console.log('Subscription status:', subscriptionRes.data.data);
-              }
-            })
-          } catch(err){
-            console.log(err)
-          }
-        })
-      } catch(err) {
-        console.log(err)
-      }
+    //       try{
+    //         const accessToken = localStorage.getItem('accessToken');
+    //         axios.get(`http://localhost:3000/api/subscription/status/${videoDetail.channel}`,{
+    //           headers: {
+    //             "Content-Type" : 'application/json',
+    //             "Authorization" : `Bearer ${accessToken}`
+    //           }
+    //         })
+    //         .then(subscriptionRes => {
+    //           console.log('this is demo for testiing')
+    //           if(res.data.success) {
+    //             setIsSubscribed(subscriptionRes.data.data.isSubscribed)
+    //             console.log('Subscription status:', subscriptionRes.data.data);
+    //           }
+    //         })
+    //       } catch(err){
+    //         console.log(err)
+    //       }
+    //     })
+    //   } catch(err) {
+    //     console.log(err)
+    //   }
+    // }
+    fetchVideoDetails();
+  }, [vidId]); // Combined dependencies from both useEffect hooks
+
+ // Here the first useEffect end
+
+// seperate useEffect to fetch channel details when videoDetail.channel changes
+  useEffect(()=> {
+      const fetchChannelDetails = async() => {
+        try{
+            await axios.get(`http://localhost:3000/api/channel/${videoDetail.channel}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        console.log(res.data.data);
+        setChannelDetail(res.data.data);
+      })
+        } catch(err){
+      console.log('Error in fetching channel details', err)
     }
-
-    
-
-    if (vidId) {
-      fetchVideoDetails();
-      channelDetails();
-    }
-  }, [vidId, videoDetail.channel, isSubscribed , likes, dislikes]); // Combined dependencies from both useEffect hooks
-
- 
+    fetchChannelDetails();
+  }}, [videoDetail.channel])
 
   const handleSubscribe = async() => {
     try{
@@ -113,6 +138,8 @@ function VideoPlayerPage() {
     } catch(err){
       console.log('error', err)
     }
+
+    if (videoDetail.channel) fetchChannelDetails(videoDetail.channel);
     
   }
 
@@ -148,7 +175,7 @@ function VideoPlayerPage() {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
-    if(response.data.ok){
+    if(response.data.success){
       console.log('Video liked successfully!');
       setLikes(likes + 1);
     }
@@ -167,17 +194,13 @@ function VideoPlayerPage() {
   // DISLIKE THE CURRENT VIDEO
   const dislikeHandler = async() => {
   try {
-    const accessToken = localStorage.getItem('accessToken');
-    if (!accessToken) {
-      throw new Error("No access token found");
-    }
     const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseDislike`, {}, {
       headers: {
         'Content-type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
-    if(response.data.ok){
+    if(response.data.success){
       console.log('Video disliked successfully!');
       setDislikes(dislikes + 1);
     }
@@ -231,42 +254,42 @@ function VideoPlayerPage() {
             
             {/* Video Info */}
             <div className="videoInfo space-y-4">
-              <h1 className="text-2xl font-semibold ">
+              <h1 className="text-2xl font-bold tracking-tight leading-tight mb-1">
                 {videoDetail.title || 'Untitled Video'}
               </h1>
               <div className="engagements flex justify-between items-center mr-10 ">
                 <div className="left-side flex gap-x-6 items-center">
-                  <div className="chennel-name-picture flex gap-4 items-center ">
-                    <div className="w-12 h-12 md:w-10 md:h-10 cursor-pointer rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-colors">
+                  <div className="chennel-name-picture flex gap-2 items-center ">
+                    <div className="w-10 h-10 md:w-10 md:h-10 cursor-pointer rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-colors">
                       <img className="channel-profile-picture" src={channelDetail.avatar}></img>
                     </div>
                     <div>
-                      <h1 className="channel-title text-xl font-normal">{channelDetail.channelName}</h1>
-                      <p className="text-xs ">{channelDetail.subscriberCount} Subscribers</p>
+                      <h1 className="channel-title text-xl font-semibold ">{channelDetail.channelName}</h1>
+                      <p className="text-xs text-gray-700">{channelDetail.subscriberCount} Subscribers</p>
                     </div>
                     
                   </div>
-                  <div className="channel-subscription rounded-full hover:scale-105 cursor-pointer" onClick={handleSubscription}><span className={`py-3 px-5 rounded-full ${isSubscribed ? 'bg-gray-100 text-black' : ' bg-black text-white'} font-medium`}>{isSubscribed ? 'Subscribed' : 'Subscribe'}</span></div>
+                  <div className="channel-subscription rounded-full hover:scale-105 cursor-pointer" onClick={handleSubscription}><span className={`py-2 px-4 rounded-full ${isSubscribed ? 'bg-gray-100 text-black' : ' bg-black text-white'} font-medium`}>{isSubscribed ? 'Subscribed' : 'Subscribe'}</span></div>
                 </div>
-                <div className="right-side flex">
+                <div className="right-side flex justify-centern items-center">
                   {/* like button */}
-                  <div className="channel-engagement"><span className="py-3 px-5 rounded-l-full bg-gray-200 flex items-center gap-x-3" onClick={likeHandler}><AiOutlineLike className="text-2xl"/>{videoDetail.likes || 0}</span></div>
+                  <div className="channel-engagement"><span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer" onClick={likeHandler}><AiOutlineLike className="text-2xl"/>{videoDetail.likes || 0}</span></div>
 
                   {/* Dislike button */}
-                  <div className="channel-engagement text-xl">
+                  <div className="channel-engagement ">
                     <span 
-                      className="py-3 px-5 rounded-r-full flex items-center gap-x-3 border-l-2 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-colors" 
+                      className="py-2 px-4 rounded-r-full flex items-center gap-x-1 border-l-2 border-gray-400 bg-gray-100 cursor-pointer font-semibold hover:bg-gray-300 transition-colors" 
                       onClick={dislikeHandler}
                     >
                       <AiOutlineDislike className="text-2xl" />
                       {videoDetail.dislikes || 0}
-                    </span>
+                    </span> 
                   </div>
-                  <div className="py-3 ml-5 px-5 rounded-full flex items-center gap-x-2  bg-gray-200 "><BsShare className="text-2xl"/>Share</div>
+                  <div className="py-2 ml-5 px-4 rounded-full flex items-center gap-x-2  bg-gray-100 font-semibold hover:bg-gray-300 cursor-pointer"><BsShare className="text-xl"/>Share</div>
                 </div>
               </div>
               <div className="bg-gray-200 rounded-2xl p-5">
-                  <p className="text-gray-600 text-lg leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed">
                       {videoDetail.description || 'No description available'}
                   </p>
               </div>

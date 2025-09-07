@@ -11,9 +11,7 @@ router.get('/:videoId', authenticateUser, videoInformation); // Get the video in
 router.post('/', authenticateUser, newVideo); // create / upload new video
 router.put('/:videoId', authenticateUser, updateVideoInfo); // change video title, description and thumbnailUrl only
 router.delete('/:videoId', authenticateUser, deleteVideo); // delete video
-router.post('/:videoId/view', authenticateUser,  incrementViewCount); // increase video count
+router.post('/:videoId/view',  incrementViewCount); // increase video count
 router.get('/:videoId/comments', authenticateUser, getVideoComment );
-
-
 
 export default router;
