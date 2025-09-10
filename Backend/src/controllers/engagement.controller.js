@@ -11,12 +11,6 @@ const increaseLikes = asyncHandler(async (req, res) => {
     const videoId = req.params.videoId;
     const userId = req.user.id;
 
-    // Check if the user has already liked the video
-    const userDetails = await user.findById(userId);
-    if(userDetails.likedVideos.includes(videoId)){
-        return res.status(400).json(new apiResponse(400, "You have already liked this video."));
-    }
-
     const video = await videos.findById(videoId);
     if(!video){
         throw new apiError(404, "Video not found!")
@@ -34,7 +28,7 @@ const increaseLikes = asyncHandler(async (req, res) => {
     await user.findByIdAndUpdate(
         userId,
         {
-            $addToSet: { likes: videoId }
+            $addToSet: { likedVideos: videoId }
         }
     );
 
@@ -44,37 +38,45 @@ const increaseLikes = asyncHandler(async (req, res) => {
 })
 
 // **DELETE /api/videos/:videoId/like** - Takes: videoId → Returns: updated like count | *Removes like from video*
+// **DELETE /api/videos/:videoId/like** - Takes: videoId → Returns: updated like count | *Removes like from video*
 const decreaseLikes = asyncHandler(async (req, res) => {
-    const videoId = req.params.videoId;
+  const videoId = req.params.videoId;
+  const userId = req.user.id;
 
-        const userId = req.user.id;
+  // First decrease like count
+  const currentVideo = await videos.findByIdAndUpdate(
+    videoId,
+    {
+      $inc: { likes: -1 }
+    },
+    { new: true }
+  );
 
-    // Check if the user has already liked the video
-    // const existingLike = await user.likes.find(like => like.userId === userId);
-    const userDetails = await user.findById(userId);
-    if(userDetails.dislikedVideos.includes(videoId)){
-        return res.status(400).json(new apiResponse(400, "You have already disliked this video."));
-    }
+  if (!currentVideo) {
+    throw new apiError(404, "Video not found!");
+  }
 
-    const currentVideo = await videos.findByIdAndUpdate(videoId,
-        {
-            $inc: { likes : -1}
-        },
-        { new : true }
-    )
-
-    if(!currentVideo){
-        throw new apiError('400', 'Video not found!')
-    }
-    
-  // Ensure likes doesn't go below 0 (optional, depends on schema)
+  // Ensure likes doesn't go below 0 (safety)
   if (currentVideo.likes < 0) {
     await videos.findByIdAndUpdate(videoId, { $set: { likes: 0 } });
     currentVideo.likes = 0;
   }
 
-    res.status(200).json(new apiResponse(200, "Like count decreased successfully.", currentVideo))
-})
+  // Remove videoId from user's likedVideos array
+  await user.findByIdAndUpdate(
+    userId,
+    {
+      $pull: { likedVideos: videoId }
+    }
+  );
+
+  res
+    .status(200)
+    .json(
+      new apiResponse(200, "Like removed successfully.", currentVideo)
+    );
+});
+
 
 
 // **POST /api/videos/:videoId/dislike** - Takes: videoId → Returns: updated dislike count | *Dislikes a video*
@@ -83,11 +85,6 @@ const increaseDislikes = asyncHandler(async (req, res) => {
     const videoId = req.params.videoId;
     const userId = req.user.id;
 
-    // Check if the user has already disliked the video
-    const userDetails = await user.findById(userId);
-    if(userDetails.dislikes && userDetails.dislikes.includes(videoId)){
-        return res.status(400).json(new apiResponse(400, "You have already disliked this video."));
-    }
 
     const video = await videos.findById(videoId);
     if(!video){
@@ -106,31 +103,52 @@ const increaseDislikes = asyncHandler(async (req, res) => {
     await user.findByIdAndUpdate(
         userId,
         {
-            $addToSet: { dislikes: videoId }
+            $addToSet: { dislikedVideos: videoId }
         }
     );
 
     console.log(updatedVideo)
     
-    res.status(200).json(new apiResponse(200, "Dislike count increased successfully.", updatedVideo))
+    res.status(200).json(new apiResponse(200, "Dislike count increased successfully.", {updatedVideo, isLiked : true}))
 })
 
 // **DELETE /api/videos/:videoId/dislike** - Takes: videoId → Returns: updated dislike count | *Removes dislike from video*
 const decreaseDislikes = asyncHandler(async (req, res) => {
-    const videoId = req.params.videoId;
+  const videoId = req.params.videoId;
+  const userId = req.user.id;
 
-    const currentVideo = await videos.findByIdAndUpdate(videoId,
-        {
-            $inc: { dislikes : -1}
-        },
-        { new : true }
-    )
+  // First decrease like count
+  const currentVideo = await videos.findByIdAndUpdate(
+    videoId,
+    {
+      $inc: { dislikes: -1 }
+    },
+    { new: true }
+  );
 
-    if(!currentVideo){
-        throw new apiError('400', 'Video not found!')
+  if (!currentVideo) {
+    throw new apiError(404, "Video not found!");
+  }
+
+  // Ensure likes doesn't go below 0 (safety)
+  if (currentVideo.dislikes < 0) {
+    await videos.findByIdAndUpdate(videoId, { $set: { dislikes: 0 } });
+    currentVideo.dislikes = 0;
+  }
+
+  // Remove videoId from user's likedVideos array
+  await user.findByIdAndUpdate(
+    userId,
+    {
+      $pull: { dislikedVideos: videoId }
     }
-    
-    res.status(200).json(new apiResponse(200, "Dislike count decreased successfully.", currentVideo))
-})
+  );
+
+  res
+    .status(200)
+    .json(
+      new apiResponse(200, "Disike removed successfully.", currentVideo)
+    );
+});
 
 export { increaseLikes, decreaseLikes, increaseDislikes, decreaseDislikes} ;
