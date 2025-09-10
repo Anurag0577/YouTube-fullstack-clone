@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import cloudinary from "cloudinary-video-player";
 import "cloudinary-video-player/cld-video-player.min.css";
 
@@ -184,4 +184,6 @@ const VideoPlayer = ({ id, publicId, playerConfig, sourceConfig, className = "",
   );
 };
 
-export default VideoPlayer;
+export default memo(VideoPlayer, (prevProps, nextProps) => {
+  return prevProps.publicId === nextProps.publicId;
+} );

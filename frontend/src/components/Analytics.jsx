@@ -1,0 +1,5 @@
+function Analytics(){
+
+}
+
+export {Analytics}

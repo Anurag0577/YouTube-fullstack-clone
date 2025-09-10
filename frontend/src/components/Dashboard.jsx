@@ -10,12 +10,16 @@ import { AiOutlineEdit } from 'react-icons/ai';
 import { AiOutlineDelete } from 'react-icons/ai';
 import EditPopup from "./EditPopup.jsx";
 import axios from "axios";
+import { FaWandMagicSparkles } from 'react-icons/fa6';
+import { Analytics } from "./Analytics.jsx";
+import { Customisation } from "./customisation.jsx";
 
 function Dashboard() {
   const [videos, setVideos] = useState([]);
   const [videoId, setVideoId] = useState('')
   const [isEditPopOpen, setIsEditPopOpen] = useState(false);
   const isSidebarOpen = useSelector((state) => state.sidebarHandler.value)
+  const [componentShow, setComponentShow] = useState('Content')
   const createVideoPopup = useSelector(
     (state) => state.createVideoPopup.value
   );
@@ -107,13 +111,17 @@ function Dashboard() {
                                   <div className="sidebar-item-container flex-1">
 
                                     <ul className="space-y-2 p-4">
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition">
+                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Content')}>
                                         <HiOutlineVideoCamera className="text-2xl mr-2"/>
                                         Content
                                       </li>
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition">
+                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Analytics')}>
                                         <IoAnalyticsSharp className="text-2xl mr-2"/>
                                         Analytics
+                                      </li>
+                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Customisation')}>
+                                        <FaWandMagicSparkles className="text-2xl mr-2"/>
+                                        Customisation 
                                       </li>
                                     </ul>
                                   </div>
@@ -141,8 +149,8 @@ function Dashboard() {
                         
                                 }
         
-
-        <div className={`flex-1 ${isSidebarOpen ? 'ml-[200px]' : 'ml-[100px]'} min-h-screen transition-all duration-300 mr-10 mb-10`}>
+        {componentShow === 'Content' && (
+            <div className={`flex-1 ${isSidebarOpen ? 'ml-[200px]' : 'ml-[100px]'} min-h-screen transition-all duration-300 mr-10 mb-10`}>
           <h1 className="text-2xl mb-5 font-bold ">Channel Content</h1>
           <div className="w-full flex flex-col gap-2">
                 {videos.map(video => (
@@ -157,6 +165,13 @@ function Dashboard() {
                 ))}
           </div>   
         </div>
+          ) 
+          
+        }
+
+        {componentShow==='Analytics' && <Analytics/> }
+        {componentShow === 'Customisation' && <Customisation isSidebarOpen={isSidebarOpen} /> }
+        
         </div>
         {/* SideBar */}
         

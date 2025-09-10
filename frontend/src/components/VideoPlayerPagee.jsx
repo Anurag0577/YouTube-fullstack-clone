@@ -8,8 +8,6 @@ import { AiFillDislike } from 'react-icons/ai';
 import { AiOutlineLike } from 'react-icons/ai';
 import { AiFillLike } from 'react-icons/ai';
 import { BsShare } from 'react-icons/bs';
-import {jwtDecode} from "jwt-decode";
-
 
 function VideoPlayerPage() {
   const [videoDetail, setVideoDetail] = useState({});
@@ -34,7 +32,7 @@ function VideoPlayerPage() {
         }
       })
       .then(res => {
-
+        console.log(res.data.data);
         setChannelDetail(res.data.data);
         
             const accessToken = localStorage.getItem('accessToken');
@@ -46,10 +44,10 @@ function VideoPlayerPage() {
               }
             })
             .then(subscriptionRes => {
-
+              console.log('this is demo for testiing')
               if(res.data.success) {
                 setIsSubscribed(subscriptionRes.data.data.isSubscribed);
-
+                console.log('Subscription status:', subscriptionRes.data.data);
               }
             })
           } catch(err){
@@ -81,9 +79,13 @@ function VideoPlayerPage() {
           }
         })
         .then(response => {
+            console.log('Video details response:', response.data.data);
           setVideoDetail(response.data.data || {});
           setLikes(response.data.data.likes);
-                setDislikes(response.data.data.dislikes);
+          setDislikes(response.data.data.dislikes);
+          setIsLiked(response.data.data.isLiked || false);
+          setIsDisliked(response.data.data.isDisliked || false);
+          
           try {
             axios.post(`http://localhost:3000/api/videos/${vidId}/view`, {}, {
               headers: {
@@ -161,144 +163,97 @@ function VideoPlayerPage() {
     (isSubscribed ? handleUnsubscribe() : handleSubscribe());
   }
 
-  // THIRD useEffect FOR FETCHING A USER DATA
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
-    const userId = jwtDecode(accessToken)._id;
-    console.log(jwtDecode(accessToken))
-    
-      const fetchedUser = async() => {
-        try {
-        await axios.get(`http://localhost:3000/api/users/${userId}`, {
-          headers: {
-            'Content-Type': "application/json",
-            'Authorization': `Bearer ${accessToken}`
-          }
-        })
-        .then(response => {
-          const allLikedVideo = response.data.data.likedVideos;
-          console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
-          if(allLikedVideo.includes(vidId)) {
-            setIsLiked(true);
-          } else {
-            setIsLiked(false);
-          }
-
-          // FOR DISLIKED VIDEO
-          const allDislikeVideo = response.data.data.dislikedVideos;
-          console.log('VideoId available in the allDislikeVideo', allDislikeVideo.includes(vidId))
-          if(allDislikeVideo.includes(vidId)){
-            setIsDisliked(true)
-          } else{
-            setIsDisliked(false)
-          }
-        })
-      
-    } catch (err) {
-      
-    }}
-    fetchedUser();
-  }, [])
-
   // LIKE A VIDEO
   const likeHandler = async() => {
-    if(!isLiked){
-        try {
-          const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseLike`, {}, {
-            headers: {
-              'Content-type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          })
-          if(response.data.success){
-            console.log('Video liked successfully!');
-            // const userDetails = await axios.get(``)
-            setLikes(likes + 1);
-            setIsLiked(true);
-            if(isDisliked === true){
-              dislikeHandler()
-            }
+    try {
+      if (isLiked) {
+        // If already liked, unlike the video
+        const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseLike`, {}, {
+          headers: {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }
-
-        } catch (err) {
-          console.log(err);
-          // Check if it's a 400 error (already liked)
-          if (err.response && err.response.status === 400) {
-            alert(err.response.data.message || "You have already liked this video.");
-          } else {
-            alert("An error occurred while liking the video.");
+        })
+        if(response.data.success){
+          console.log('Video unliked successfully!');
+          setLikes(likes - 1);
+          setIsLiked(false);
+        }
+      } else {
+        // If not liked, like the video
+        const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseLike`, {}, {
+          headers: {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        })
+        if(response.data.success){
+          console.log('Video liked successfully!');
+          setLikes(likes + 1);
+          setIsLiked(true);
+          
+          // If the video was disliked, remove the dislike
+          if (isDisliked) {
+            setDislikes(dislikes - 1);
+            setIsDisliked(false);
           }
         }
-    } else {
-        try {
-          const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseLike`, {}, {
-            headers: {
-              'Content-type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          })
-          if(response.data.success){
-            console.log('Video liked reset successfully!');
-            // const userDetails = await axios.get(``)
-            setLikes(likes - 1);
-            setIsLiked(false);
-          }
-
-        } catch (err) {
-          console.log(err);
-        }
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response && err.response.status === 400) {
+        alert(err.response.data.message || "An error occurred.");
+      } else {
+        alert("An error occurred while processing your request.");
+      }
     }
-
-}
+  }
 
   // DISLIKE THE CURRENT VIDEO
   const dislikeHandler = async() => {
-    if(isDisliked){
-          try {
-            const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseDislike`, {}, {
-              headers: {
-                'Content-type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            })
-            if(response.data.success){
-              console.log('Video disliked successfully!');
-              setDislikes(dislikes - 1);
-              setIsDisliked(false)
-            }
-
-          } catch (err) {
-            console.log(err);
+    try {
+      if (isDisliked) {
+        // If already disliked, remove the dislike
+        const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseDislike`, {}, {
+          headers: {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }
-    } else{
-          try {
-            const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseDislike`, {}, {
-              headers: {
-                'Content-type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            })
-            if(response.data.success){
-              console.log('Video disliked successfully!');
-              setDislikes(dislikes + 1);
-              setIsDisliked(true)
-              if(isLiked === true){
-                likeHandler()
-              }
-            }
-
-          } catch (err) {
-            console.log(err);
-            // Check if it's a 400 error (already disliked)
-            if (err.response && err.response.status === 400) {
-              alert(err.response.data.message || "You have already disliked this video.");
-            } else {
-              alert("An error occurred while disliking the video.");
-            }
+        })
+        if(response.data.success){
+          console.log('Dislike removed successfully!');
+          setDislikes(dislikes - 1);
+          setIsDisliked(false);
+        }
+      } else {
+        // If not disliked, dislike the video
+        const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseDislike`, {}, {
+          headers: {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }
+        })
+        if(response.data.success){
+          console.log('Video disliked successfully!');
+          setDislikes(dislikes + 1);
+          setIsDisliked(true);
+          
+          // If the video was liked, remove the like
+          if (isLiked) {
+            setLikes(likes - 1);
+            setIsLiked(false);
+          }
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response && err.response.status === 400) {
+        alert(err.response.data.message || "An error occurred.");
+      } else {
+        alert("An error occurred while processing your request.");
+      }
     }
-
-} 
+  } 
 
   return (
     <>
@@ -357,16 +312,12 @@ function VideoPlayerPage() {
                 </div>
                 <div className="right-side flex justify-centern items-center">
                   {/* like button */}
-                  <div className="channel-engagement"><span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer {()} " onClick={likeHandler}>
-                    {
-                      (isLiked)? 
-                          <AiFillLike className="text-2xl"/>
-                       : 
-                          <AiOutlineLike className="text-2xl"/>
-                    }
-                    
-                    
-                    {likes || 0}</span></div>
+                  <div className="channel-engagement">
+                    <span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer" onClick={likeHandler}>
+                      {isLiked ? <AiFillLike className="text-2xl text-blue-600" /> : <AiOutlineLike className="text-2xl" />}
+                      {likes || 0}
+                    </span>
+                  </div>
 
                   {/* Dislike button */}
                   <div className="channel-engagement ">
@@ -374,8 +325,7 @@ function VideoPlayerPage() {
                       className="py-2 px-4 rounded-r-full flex items-center gap-x-1 border-l-2 border-gray-400 bg-gray-100 cursor-pointer font-semibold hover:bg-gray-300 transition-colors" 
                       onClick={dislikeHandler}
                     >
-                      {isDisliked? <AiFillDislike className="text-2xl" /> : <AiOutlineDislike className="text-2xl" />}
-                      
+                      {isDisliked ? <AiFillDislike className="text-2xl text-red-600" /> : <AiOutlineDislike className="text-2xl" />}
                       {dislikes || 0}
                     </span> 
                   </div>
@@ -405,22 +355,3 @@ function VideoPlayerPage() {
 }
 
 export default VideoPlayerPage;
-
-
-
-
-
-
-/*
-APPROACH WE'RE GOING TO FOLLOW:-
-1. getting the user detail so we can compare-
-- import jwt-decode
-- get the user by decoding the jwt
-- fetch the user detail
-- now compare the userRes.data.data.likedVideo contain videoId
-- if yes -> setIsLiked(true) else setIsLiked(false)
-
-2. button clicked -> so if (setIsLiked = true) {decreaseLike api call} else{increaseLike api call} 
-
-
-*/

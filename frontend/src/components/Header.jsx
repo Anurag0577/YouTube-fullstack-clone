@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { show } from '../slice/createVideoPopupShow.js';
 import { FaBars } from 'react-icons/fa6';
 import { showSidebar, hideSidebar } from '../slice/sidebarHandler.js';
+import { jwtDecode } from 'jwt-decode';
 
 function Header() {
   const [firstName, setFirstName] = useState('');
@@ -26,7 +27,14 @@ function Header() {
 
   useEffect(() => {
     const user = localStorage.getItem('user');
-    
+    const currentTime = new Date().getTime();
+    const token = localStorage.getItem('accessToken');
+    const decodedToken = token ? jwtDecode(token) : null;
+    const tokenExpiry = decodedToken ? decodedToken.exp * 1000 : null;
+    if (tokenExpiry && currentTime > tokenExpiry) {
+      // Token has expired
+      localStorage.removeItem('accessToken');
+    }
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
