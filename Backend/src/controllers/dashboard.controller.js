@@ -56,18 +56,16 @@ const editChannelDetail = asyncHandler(async(req, res) => {
     if(!userInfo){
         throw new apiError(400, "User not find!")
     }
-    const {channelName, description} = req.body;
-    const avatar = req.files && req.files.channelAvatar[0] ? req.files.channelAvatar[0].path : undefined;
-    const banner = req.files && req.files.channelBanner[0] ? req.files.channelBanner[0].path : undefined;
+    const {channelName, description, cover, avatar} = req.body;
+
+
 
     const channelId = userInfo.channel;
     if(!channelId){
         throw new apiError(400, "Channel Id not found!")
     }
 
-    const updatePlayload = {channelName, description};
-    avatar ? updatePlayload.avatar = avatar : undefined;
-    banner ? updatePlayload.banner = banner : undefined;
+    const updatePlayload = {channelName, description, cover, avatar};
 
 
     const updatedChannelInfo = await channel.findByIdAndUpdate(channelId, updatePlayload , { new : true })

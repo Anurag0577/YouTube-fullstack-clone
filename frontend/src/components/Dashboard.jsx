@@ -12,12 +12,13 @@ import EditPopup from "./EditPopup.jsx";
 import axios from "axios";
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { Analytics } from "./Analytics.jsx";
-import { Customisation } from "./customisation.jsx";
+import { Customisation } from "./Customisation.jsx";
 
 function Dashboard() {
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState([])
   const [videoId, setVideoId] = useState('')
-  const [isEditPopOpen, setIsEditPopOpen] = useState(false);
+  const [isEditPopOpen, setIsEditPopOpen] = useState(false)
+  const [channelDetail, setChannelDetail] = useState(false)
   const isSidebarOpen = useSelector((state) => state.sidebarHandler.value)
   const [componentShow, setComponentShow] = useState('Content')
   const createVideoPopup = useSelector(
@@ -50,9 +51,8 @@ function Dashboard() {
           }
         })
         .then(res => {
-          console.log(res.data)
           setVideos(res.data.data.videos)
-          console.log(res.data.data.videos)
+          setChannelDetail(res.data.data)
         })
         .catch(err => console.log(err))
       
@@ -170,7 +170,7 @@ function Dashboard() {
         }
 
         {componentShow==='Analytics' && <Analytics/> }
-        {componentShow === 'Customisation' && <Customisation isSidebarOpen={isSidebarOpen} /> }
+        {componentShow === 'Customisation' && <Customisation isSidebarOpen={isSidebarOpen} channelDetail = {channelDetail} /> }
         
         </div>
         {/* SideBar */}
