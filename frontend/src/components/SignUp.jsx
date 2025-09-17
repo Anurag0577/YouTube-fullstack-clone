@@ -77,12 +77,8 @@ function SignUp() {
                 // Handle success (redirect, show message, etc.)
                 alert('Account created successfully!');
 
-                // Store both tokens
                 if (data?.data?.accessToken) {
                     localStorage.setItem('accessToken', data.data.accessToken);
-                }
-                if (data?.data?.refreshToken) {
-                    localStorage.setItem('refreshToken', data.data.refreshToken);
                 }
 
                 // Store user data

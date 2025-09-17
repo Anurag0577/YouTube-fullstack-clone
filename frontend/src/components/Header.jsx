@@ -34,6 +34,18 @@ function Header() {
     if (tokenExpiry && currentTime > tokenExpiry) {
       // Token has expired
       localStorage.removeItem('accessToken');
+      try {
+        axios.get('http://localhost:3000/auth/accessToken', {
+          headers: {
+            "Content-type": "application/json"
+          }
+        })
+        .then(res => {
+          token = res.data.data.accessToken;
+        })
+      } catch (err) {
+        console.log(err)
+      }
     }
     if (user) {
       try {

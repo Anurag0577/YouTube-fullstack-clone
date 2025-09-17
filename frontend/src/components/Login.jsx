@@ -44,9 +44,6 @@ function Login() {
             if (data.data.accessToken) {
                 localStorage.setItem('accessToken', data.data.accessToken);
             }
-            if (data.data.refreshToken) {
-                localStorage.setItem('refreshToken', data.data.refreshToken);
-            }
 
             // Store user data
             localStorage.setItem('user', JSON.stringify({

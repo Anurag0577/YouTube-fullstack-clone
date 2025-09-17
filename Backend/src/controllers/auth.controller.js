@@ -12,13 +12,13 @@ const generateAccessAndRefreshTokens = async (userId) => {
         if (!userFound) {
             throw new apiError(404, "User not found");
         }
-
-        const accessToken = userFound.genAccessToken();
         const refreshToken = userFound.genRefreshToken();
+        const accessToken = userFound.genAccessToken();
+        
 
-        // Save refresh token to database
-        userFound.refreshToken = refreshToken;
-        await userFound.save({ validateBeforeSave: false });
+        // // Save refresh token to database
+        // userFound.refreshToken = refreshToken;
+        // await userFound.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
     } catch (error) {
@@ -27,12 +27,10 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async(req, res, next) => {
-    console.log("registerUser function called");
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file);
-
+    // get the details from the frontend
     const {username, password, email, firstName, lastName} = req.body;
 
+    // Check all the required / necessary fields
     if(!username || !password || !email || !firstName){
         throw new apiError(400, "Please fill all the required details!")
     }
@@ -70,7 +68,19 @@ const registerUser = asyncHandler(async(req, res, next) => {
 
     // Generate access and refresh tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(newUser._id);
-    console.log("Tokens generated successfully");
+    console.log("accessToken and refreshToken generated successfully!");
+
+    // store the refresh token in the db
+    const updatedUser = await user.findByIdAndUpdate(newUser._id, {refreshToken})
+    console.log('Refresh token saved in db successfully!')
+
+    // store the refresh token in http-only cookie
+    res.cookies('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None"
+    })
+    // send the accessToken as a res.
 
     const userResponse = {
         userId: newUser._id,
@@ -78,7 +88,8 @@ const registerUser = asyncHandler(async(req, res, next) => {
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
-        avatar: newUser.avatar
+        avatar: newUser.avatar,
+        accessToken
     };
 
     // Send response
@@ -112,6 +123,18 @@ const loginUser = asyncHandler(async(req, res, next) => {
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(loginUser._id);
+    console.log("accessToken and refreshToken generated successfully!");
+
+    // store the refresh token in the db
+    const updatedUser = await user.findByIdAndUpdate(newUser._id, {refreshToken})
+    console.log('Refresh token saved in db successfully!')
+
+    // store the refresh token in http-only cookie
+    res.cookies('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None"
+    })
 
     // Prepare response data
     const responseData = {
@@ -121,7 +144,6 @@ const loginUser = asyncHandler(async(req, res, next) => {
         firstName: loginUser.firstName,
         lastName: loginUser.lastName,
         avatar: loginUser.avatar,
-        refreshToken,
         accessToken
     };
 
