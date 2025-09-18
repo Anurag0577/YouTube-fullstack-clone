@@ -3,6 +3,10 @@ import user from '../models/user.model.js'
 import apiError from '../utiles/apiError.js';
 import apiResponse from '../utiles/apiResponse.js'
 import { isCloudinaryConfigured } from '../utiles/cloudinary.js'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+import { response } from 'express';
+dotenv.config();
 
 // Generate Access and Refresh Tokens
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -26,6 +30,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 };
 
+
+// RESGISTER USER
 const registerUser = asyncHandler(async(req, res, next) => {
     // get the details from the frontend
     const {username, password, email, firstName, lastName} = req.body;
@@ -76,11 +82,11 @@ const registerUser = asyncHandler(async(req, res, next) => {
 
     // store the refresh token in http-only cookie
     res.cookies('refreshToken', refreshToken, {
-        httpOnly: true,
+        httpOnly: true, // now you can not get refresh token through javascript in the client side.
         secure: true,
-        sameSite: "None"
+        sameSite: "None" 
     })
-    // send the accessToken as a res.
+
 
     const userResponse = {
         userId: newUser._id,
@@ -164,6 +170,61 @@ const logoutUser = asyncHandler(async(req, res, next) => {
 
     // Send response
     res.status(200).json(new apiResponse(200, "User logged out successfully", {}));
+});
+
+
+const regenerateAccessToken = asyncHandler(async(req, res) => {
+    try {
+        // Get refresh token
+        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+        
+        if (!refreshToken) {
+            throw new apiError(401, "Refresh token required!");
+        }
+
+        // Verify refresh token
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        
+        // Get user details
+        const userDetail = await findById(decoded._id);
+        
+        if (!userDetail) {
+            throw new apiError(404, "User not found!");
+        }
+
+        // Create access token payload (only include necessary data)
+        const payload = {
+            _id: userDetail._id,
+            email: userDetail.email,
+            // Add other fields as needed, but avoid sensitive data
+        };
+
+        // Generate new access token
+        const newAccessToken = jwt.sign(
+            payload,
+            process.env.ACCESS_TOKEN_SECRET, // Correct secret
+            {
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m' // Correct expiry
+            }
+        );
+
+        res.status(200).json(
+            new apiResponse(200, "Access token generated successfully!", {
+                accessToken: newAccessToken
+            })
+        );
+
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            throw new apiError(401, "Refresh token expired!");
+        } else if (error.name === "JsonWebTokenError") {
+            throw new apiError(401, "Invalid refresh token!");
+        } else if (error instanceof apiError) {
+            throw error;
+        } else {
+            throw new apiError(500, "Token generation failed!");
+        }
+    }
 });
 
 export { registerUser, loginUser, logoutUser };
