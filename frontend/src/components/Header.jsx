@@ -28,24 +28,12 @@ function Header() {
   useEffect(() => {
     const user = localStorage.getItem('user');
     const currentTime = new Date().getTime();
-    const token = localStorage.getItem('accessToken');
+    let token = localStorage.getItem('accessToken');
     const decodedToken = token ? jwtDecode(token) : null;
     const tokenExpiry = decodedToken ? decodedToken.exp * 1000 : null;
     if (tokenExpiry && currentTime > tokenExpiry) {
       // Token has expired
       localStorage.removeItem('accessToken');
-      try {
-        axios.get('http://localhost:3000/auth/accessToken', {
-          headers: {
-            "Content-type": "application/json"
-          }
-        })
-        .then(res => {
-          token = res.data.data.accessToken;
-        })
-      } catch (err) {
-        console.log(err)
-      }
     }
     if (user) {
       try {

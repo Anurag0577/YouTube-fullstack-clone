@@ -19,19 +19,13 @@ const generateAccessAndRefreshTokens = async (userId) => {
         const refreshToken = userFound.genRefreshToken();
         const accessToken = userFound.genAccessToken();
         
-
-        // // Save refresh token to database
-        // userFound.refreshToken = refreshToken;
-        // await userFound.save({ validateBeforeSave: false });
-
         return { accessToken, refreshToken };
     } catch (error) {
         throw new apiError(500, "Something went wrong while generating tokens");
     }
 };
 
-
-// RESGISTER USER
+// REGISTER USER
 const registerUser = asyncHandler(async(req, res, next) => {
     // get the details from the frontend
     const {username, password, email, firstName, lastName} = req.body;
@@ -80,13 +74,13 @@ const registerUser = asyncHandler(async(req, res, next) => {
     const updatedUser = await user.findByIdAndUpdate(newUser._id, {refreshToken})
     console.log('Refresh token saved in db successfully!')
 
-    // store the refresh token in http-only cookie
-    res.cookies('refreshToken', refreshToken, {
+    // ✅ FIXED: Use res.cookie() instead of req.cookies()
+    res.cookie('refreshToken', refreshToken, {
         httpOnly: true, // now you can not get refresh token through javascript in the client side.
-        secure: true,
-        sameSite: "None" 
-    })
-
+        secure: process.env.NODE_ENV === 'production', // Only secure in production
+        sameSite: process.env.NODE_ENV === 'production' ? "None" : "Lax", // Adjust based on environment
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     const userResponse = {
         userId: newUser._id,
@@ -132,15 +126,16 @@ const loginUser = asyncHandler(async(req, res, next) => {
     console.log("accessToken and refreshToken generated successfully!");
 
     // store the refresh token in the db
-    const updatedUser = await user.findByIdAndUpdate(newUser._id, {refreshToken})
+    const updatedUser = await user.findByIdAndUpdate(loginUser._id, {refreshToken})
     console.log('Refresh token saved in db successfully!')
 
-    // store the refresh token in http-only cookie
-    res.cookies('refreshToken', refreshToken, {
+    // ✅ FIXED: Use res.cookie() instead of req.cookies()
+    res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "None"
-    })
+        sameSite: "None",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     // Prepare response data
     const responseData = {
@@ -168,15 +163,21 @@ const logoutUser = asyncHandler(async(req, res, next) => {
         }
     });
 
+    // ✅ Clear the cookie on logout
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None"
+    });
+
     // Send response
     res.status(200).json(new apiResponse(200, "User logged out successfully", {}));
 });
 
-
 const regenerateAccessToken = asyncHandler(async(req, res) => {
     try {
-        // Get refresh token
-        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+        // Get refresh token from cookies
+        const refreshToken = req.cookies.refreshToken;
         
         if (!refreshToken) {
             throw new apiError(401, "Refresh token required!");
@@ -185,26 +186,32 @@ const regenerateAccessToken = asyncHandler(async(req, res) => {
         // Verify refresh token
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
         
-        // Get user details
-        const userDetail = await findById(decoded._id);
+        // ✅ FIXED: Use 'user' instead of 'findById'
+        const userDetail = await user.findById(decoded._id);
         
         if (!userDetail) {
             throw new apiError(404, "User not found!");
+        }
+
+        // Verify refresh token matches the one in database
+        if (userDetail.refreshToken !== refreshToken) {
+            throw new apiError(401, "Invalid refresh token!");
         }
 
         // Create access token payload (only include necessary data)
         const payload = {
             _id: userDetail._id,
             email: userDetail.email,
-            // Add other fields as needed, but avoid sensitive data
+            username: userDetail.username,
+            firstName: userDetail.firstName
         };
 
         // Generate new access token
         const newAccessToken = jwt.sign(
             payload,
-            process.env.ACCESS_TOKEN_SECRET, // Correct secret
+            process.env.ACCESS_TOKEN_SECRET,
             {
-                expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m' // Correct expiry
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m'
             }
         );
 
@@ -227,4 +234,4 @@ const regenerateAccessToken = asyncHandler(async(req, res) => {
     }
 });
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, regenerateAccessToken };

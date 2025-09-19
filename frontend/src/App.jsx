@@ -12,6 +12,8 @@ import VideoPlayerPage from './components/VideoPlayerPage.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
 import ChannelPage from './components/ChannelPage.jsx'
+import ProtectedRoutes from './components/ProtectedRoutes.jsx'
+
 
 function App() {
   const router = createBrowserRouter([
@@ -29,7 +31,11 @@ function App() {
     },
     {
       path: '/channel-dashboard',
-      element: <Dashboard/>
+      element: (
+        <ProtectedRoutes>
+          <Dashboard/>
+        </ProtectedRoutes>
+      )
     },
     {
       path: "/channel/:channelId",
