@@ -22,26 +22,21 @@ function ProtectedRoutes({ children }) {
 
     const refreshAccessToken = async () => {
         try {
-            // Use POST method and send refresh token in body or use cookies
-            const response = await axios.post('http://localhost:3000/api/auth/refresh', {
-                refreshToken: localStorage.getItem('refreshToken') // If using localStorage
-            }, {
-                withCredentials: true // If using cookies
-            });
+            const response = await axios.post(
+                'http://localhost:3000/api/auth/newAccessToken', 
+                {}, 
+                {
+                    withCredentials: true
+                }
+            );
 
             const newAccessToken = response.data.data.accessToken;
-            
-            // Store new access token
             localStorage.setItem('accessToken', newAccessToken);
-            
-            // If backend sends new refresh token, store it too
-            if (response.data.data.refreshToken) {
-                localStorage.setItem('refreshToken', response.data.data.refreshToken);
-            }
             
             return newAccessToken;
         } catch (error) {
             console.error('Token refresh failed:', error);
+            localStorage.removeItem('accessToken');
             throw error;
         }
     };
@@ -49,60 +44,49 @@ function ProtectedRoutes({ children }) {
     const validateAuthentication = async () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
-            const refreshToken = localStorage.getItem('refreshToken');
 
-            // If no tokens at all, user is not authenticated
-            if (!accessToken && !refreshToken) {
-                setIsAuthenticated(false);
-                return;
+            if (!accessToken) {
+                console.log('No access token found, trying to refresh...');
+                try {
+                    await refreshAccessToken();
+                    setIsAuthenticated(true);
+                    return;
+                } catch (error) {
+                    console.log('Refresh failed, user not authenticated');
+                    setIsAuthenticated(false);
+                    return;
+                }
             }
 
-            // If access token exists and is not expired, user is authenticated
-            if (accessToken && !isTokenExpired(accessToken)) {
-                setIsAuthenticated(true);
-                return;
+            if (isTokenExpired(accessToken)) {
+                console.log('Access token expired, trying to refresh...');
+                try {
+                    await refreshAccessToken();
+                    setIsAuthenticated(true);
+                    return;
+                } catch (error) {
+                    console.log('Refresh failed, user not authenticated');
+                    setIsAuthenticated(false);
+                    return;
+                }
             }
 
-            // Access token is expired, check refresh token
-            if (!refreshToken) {
-                console.log('No refresh token available');
-                setIsAuthenticated(false);
-                return;
-            }
-
-            // Check if refresh token is expired
-            if (isTokenExpired(refreshToken)) {
-                console.log('Refresh token is also expired');
-                // Clear expired tokens
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                setIsAuthenticated(false);
-                return;
-            }
-
-            // Refresh token is valid, try to get new access token
-            console.log('Access token expired, refreshing...');
-            await refreshAccessToken();
+            console.log('Access token is valid');
             setIsAuthenticated(true);
 
         } catch (error) {
             console.error('Authentication validation failed:', error);
-            
-            // Clear tokens on error
             localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
             setIsAuthenticated(false);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Run authentication check only once when component mounts
     useEffect(() => {
         validateAuthentication();
-    }, []); // Empty dependency array - runs only once
+    }, []);
 
-    // Show loading while checking authentication
     if (isLoading) {
         return (
             <div style={{ 
@@ -117,12 +101,11 @@ function ProtectedRoutes({ children }) {
         );
     }
 
-    // Redirect to login if not authenticated
+    console.log('I am in protected route, here is the isAuthenticated value', isAuthenticated)
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    // Render protected content
     return children;
 }
 
