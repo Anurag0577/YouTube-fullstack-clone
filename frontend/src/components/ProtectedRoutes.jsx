@@ -22,6 +22,8 @@ function ProtectedRoutes({ children }) {
 
     const refreshAccessToken = async () => {
         try {
+            console.log('Attempting to refresh token...');
+            
             const response = await axios.post(
                 'http://localhost:3000/api/auth/newAccessToken', 
                 {}, 
@@ -30,12 +32,15 @@ function ProtectedRoutes({ children }) {
                 }
             );
 
+            console.log('Refresh response:', response.data);
+            
             const newAccessToken = response.data.data.accessToken;
             localStorage.setItem('accessToken', newAccessToken);
             
             return newAccessToken;
         } catch (error) {
             console.error('Token refresh failed:', error);
+            console.error('Error details:', error.response?.data);
             localStorage.removeItem('accessToken');
             throw error;
         }

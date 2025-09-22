@@ -38,23 +38,26 @@ function VideoPlayerPage() {
         setChannelDetail(res.data.data);
         
             const accessToken = localStorage.getItem('accessToken');
-            try{
-            axios.get(`http://localhost:3000/api/subscription/status/${channelId}`,{
-              headers: {
-                "Content-Type" : 'application/json',
-                "Authorization" : `Bearer ${accessToken}`
-              }
-            })
-            .then(subscriptionRes => {
+            if(accessToken){
+              try{
+                axios.get(`http://localhost:3000/api/subscription/status/${channelId}`,{
+                  headers: {
+                    "Content-Type" : 'application/json',
+                    "Authorization" : `Bearer ${accessToken}`
+                  }
+                })
+                .then(subscriptionRes => {
 
-              if(res.data.success) {
-                setIsSubscribed(subscriptionRes.data.data.isSubscribed);
+                  if(res.data.success) {
+                    setIsSubscribed(subscriptionRes.data.data.isSubscribed);
 
+                  }
+                })
+              } catch(err){
+                console.log(err)
               }
-            })
-          } catch(err){
-            console.log(err)
-          }
+            }
+            
       })
         } catch(err){
       console.log('Error in fetching channel details', err)
@@ -69,15 +72,9 @@ function VideoPlayerPage() {
     // fetch the clicked video details
     const fetchVideoDetails =() => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          throw new Error("No access token found");
-        }
-
         axios.get(`http://localhost:3000/api/videos/${vidId}`, {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
           }
         })
         .then(response => {
@@ -164,40 +161,44 @@ function VideoPlayerPage() {
   // THIRD useEffect FOR FETCHING A USER DATA
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
-    const userId = jwtDecode(accessToken)._id;
-    console.log(jwtDecode(accessToken))
-    
-      const fetchedUser = async() => {
-        try {
-        await axios.get(`http://localhost:3000/api/users/${userId}`, {
-          headers: {
-            'Content-Type': "application/json",
-            'Authorization': `Bearer ${accessToken}`
-          }
-        })
-        .then(response => {
-          const allLikedVideo = response.data.data.likedVideos;
-          console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
-          if(allLikedVideo.includes(vidId)) {
-            setIsLiked(true);
-          } else {
-            setIsLiked(false);
-          }
+    if(accessToken){
+        const userId = jwtDecode(accessToken)._id;
+          console.log(jwtDecode(accessToken))
+          
+            const fetchedUser = async() => {
+              try {
+              await axios.get(`http://localhost:3000/api/users/${userId}`, {
+                headers: {
+                  'Content-Type': "application/json",
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              })
+              .then(response => {
+                const allLikedVideo = response.data.data.likedVideos;
+                console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
+                if(allLikedVideo.includes(vidId)) {
+                  setIsLiked(true);
+                } else {
+                  setIsLiked(false);
+                }
 
-          // FOR DISLIKED VIDEO
-          const allDislikeVideo = response.data.data.dislikedVideos;
-          console.log('VideoId available in the allDislikeVideo', allDislikeVideo.includes(vidId))
-          if(allDislikeVideo.includes(vidId)){
-            setIsDisliked(true)
-          } else{
-            setIsDisliked(false)
-          }
-        })
-      
-    } catch (err) {
-      
-    }}
-    fetchedUser();
+                // FOR DISLIKED VIDEO
+                const allDislikeVideo = response.data.data.dislikedVideos;
+                console.log('VideoId available in the allDislikeVideo', allDislikeVideo.includes(vidId))
+                if(allDislikeVideo.includes(vidId)){
+                  setIsDisliked(true)
+                } else{
+                  setIsDisliked(false)
+                }
+              })
+            
+          } catch (err) {
+            
+          }}
+        fetchedUser();
+    }
+    
+    
   }, [])
 
   // LIKE A VIDEO

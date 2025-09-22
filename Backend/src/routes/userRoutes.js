@@ -6,6 +6,6 @@ const router = express.Router();
 
 
 // Get specific user information by ID
-router.get('/:userId', authenticateUser, userInformation);
+router.get('/:userId', userInformation);
 
 export default router;

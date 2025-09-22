@@ -13,6 +13,7 @@ import axios from "axios";
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { Analytics } from "./Analytics.jsx";
 import { Customisation } from "./Customisation.jsx";
+import { Navigate } from 'react-router-dom';
 
 function Dashboard() {
   const [videos, setVideos] = useState([])
@@ -27,23 +28,26 @@ function Dashboard() {
 
   useEffect(() => {
     const channelDetail = async() => {
-      const accessToken = localStorage.getItem('accessToken');
       let channelID = '';
-      if(!accessToken){
-        console.log("accesstoken unavilable!")
-      }
-      const decodedToken = jwtDecode(accessToken);
+      const accessToken = localStorage.getItem('accessToken');
+      if(accessToken){
+        const decodedToken = jwtDecode(accessToken);
       const userID = decodedToken._id;
         await axios.get(`http://localhost:3000/api/users/${userID}`,{
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
           }
         })
         .then(res => {
           channelID = res.data.data.channel;
         })
         .catch(err => console.log(err))
+      }
+      if(!accessToken){
+          throw new Error('Authentication required. Please login again.');
+          <Navigate to="/login" replace />;
+      }
+      
 
         await axios.get(`http://localhost:3000/api/channel/${channelID}`, {
           headers: {

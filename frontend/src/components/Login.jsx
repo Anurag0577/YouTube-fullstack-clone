@@ -26,6 +26,7 @@ function Login() {
                 headers: {
                     'Content-Type': 'application/json' // Fixed typo: was 'Context-Type'
                 },
+                credentials: 'include', // CRITICAL: Include cookies in the request
                 body: JSON.stringify({
                     email,
                     password

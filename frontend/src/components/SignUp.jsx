@@ -68,6 +68,7 @@ function SignUp() {
             // Use the correct backend API endpoint
             const response = await fetch('http://localhost:3000/api/auth/signup', {
                 method: 'POST',
+                credentials: 'include', // CRITICAL: Include cookies in the request
                 body: formData,
             });
 

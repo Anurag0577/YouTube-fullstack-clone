@@ -6,12 +6,12 @@ import { getVideoComment } from '../controllers/comment.controller.js';
 const router = express.Router();
 
 router.get('/allVideos', allVideos)
-router.get('/:videoId', authenticateUser, videoInformation); // Get the video information
+router.get('/:videoId', videoInformation); // Get the video information
 // we already uploaded the thumbnail and the video using uplaod routes till this point when this api called, so we dont need to upload thumbnail or video files
 router.post('/', authenticateUser, newVideo); // create / upload new video
 router.put('/:videoId', authenticateUser, updateVideoInfo); // change video title, description and thumbnailUrl only
 router.delete('/:videoId', authenticateUser, deleteVideo); // delete video
 router.post('/:videoId/view',  incrementViewCount); // increase video count
-router.get('/:videoId/comments', authenticateUser, getVideoComment );
+router.get('/:videoId/comments', getVideoComment ); // we are not using it right now
 
 export default router;

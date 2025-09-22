@@ -71,10 +71,32 @@ function Header() {
     dispatch(show());
   }
 
-  function logoutAccount() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    setIsUserLogin(false);
+  async function logoutAccount() {
+    try {
+      // Call the logout API endpoint
+      const response = await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // CRITICAL: Send cookies to server
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        console.log('Logout successful');
+      } else {
+        console.error('Logout failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear frontend storage, even if API call fails
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      setIsUserLogin(false);
+      setIsProfileDropdownOpen(false);
+      // No redirect - user stays on current page
+    }
   }
 
   const handleSidebar = () => {
