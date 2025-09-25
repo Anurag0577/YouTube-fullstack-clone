@@ -6,33 +6,26 @@ import { AiOutlineHome } from 'react-icons/ai';
 import { MdOutlineSubscriptions } from 'react-icons/md';
 import { BsCameraVideoOffFill } from 'react-icons/bs';
 import { FiTrendingUp } from 'react-icons/fi';
+import api from "../api/axios"; // make sure this is imported at the top
 function Homepage() {
     // Sample video data (you can replace this with your actual data)
-    const [randomVideos, setRandomVideos] = useState([]);
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    const isSidebarOpen = useSelector((state) => state.sidebarHandler.value);
 
 
-    useEffect(() => {
-        
-        
-        fetch('http://localhost:3000/api/videos/allVideos?page=1&limit=30', {
-            headers: {
-                'Content-Type' : 'application/json',  // Fixed typo
-            }
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("fetching all video failed!");
-            } else {
-                return response.json();
-            }
-        })
-        .then(data => {
-            setRandomVideos(data.data);
-        })
-        
-    }, [])
+      const [randomVideos, setRandomVideos] = useState([]);
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const isSidebarOpen = useSelector((state) => state.sidebarHandler.value);
+
+      useEffect(() => {
+        api
+          .get('/videos/allVideos?page=1&limit=30')
+          .then((response) => {
+            setRandomVideos(response.data.data);
+          })
+          .catch((error) => {
+            console.error("fetching all video failed!", error);
+          });
+      }, []);
+
 
 
     return (

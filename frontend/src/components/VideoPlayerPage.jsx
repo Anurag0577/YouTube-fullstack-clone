@@ -9,6 +9,7 @@ import { AiOutlineLike } from 'react-icons/ai';
 import { AiFillLike } from 'react-icons/ai';
 import { BsShare } from 'react-icons/bs';
 import {jwtDecode} from "jwt-decode";
+import {toast, ToastContainer} from 'react-toastify'
 
 
 function VideoPlayerPage() {
