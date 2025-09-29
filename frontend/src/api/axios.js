@@ -45,6 +45,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
         localStorage.removeItem("accessToken");
+        console.log('From axios i am redirecting it to login')
         window.location.href = "/login"; // optional logout
       }
     }

@@ -184,7 +184,15 @@ function Header() {
                       <h1 className="text-xs text-gray-700">@{username}</h1>
                     </div>
                   </div>
-                  <div className="flex" onClick={() => navigate('/channel-dashboard')}>
+                  <div className="flex" onClick={
+                    () => {
+                      const isUserLogin = localStorage.getItem('accessToken');
+                        if(!isUserLogin){
+                          toast.info("You have to login to explore this page!!")
+                        }
+                      navigate('/channel-dashboard')
+                    }   
+                  }>
                     <FiSettings className="mt-0.5 mr-1.5 text-xl" />Channel Dashboard
                   </div>
                   <div className="flex mt-3" onClick={logoutAccount}>
