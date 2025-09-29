@@ -42,12 +42,12 @@ function VideoPlayerPage() {
                 axios.get(`http://localhost:3000/api/subscription/status/${channelId}`,{
                   headers: {
                     "Content-Type" : 'application/json',
-                    "Authorization" : `Bearer ${accessToken}`
+                    "Authorization" : `Bearer ${localStorage.getItem('accessToken')}`
                   }
                 })
                 .then(subscriptionRes => {
 
-                  if(res.data.success) {
+                  if(subscriptionRes.data.success) {
                     setIsSubscribed(subscriptionRes.data.data.isSubscribed);
 
                   }
@@ -128,6 +128,7 @@ function VideoPlayerPage() {
   })
     } catch(err){
       console.log('error', err)
+      toast.info(err)
     }
 
     if (videoDetail.channel) fetchChannelDetails(videoDetail.channel);
