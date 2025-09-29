@@ -115,20 +115,18 @@ function VideoPlayerPage() {
       return;
     }
     try{
-    await api.post('/subscription/subscribe',{
+    const res = await api.post('/subscription/subscribe',{
       channelId : videoDetail.channel // passing the channel Id to backend,
     },
     {withCredentials: true}
   )
-  .then(res => {
     if(res.data.success){
       setIsSubscribed(true)
       console.log('Channel Subscribed')
     }
-  })
     } catch(err){
-      console.log('error', err)
-      toast.info(err)
+      console.log('error', err.response.data.message)
+      toast.info(err.response.data.message)
     }
 
     if (videoDetail.channel) fetchChannelDetails(videoDetail.channel);
@@ -142,7 +140,7 @@ function VideoPlayerPage() {
       return;
     }
     try {
-      const unsubscribing = await axios.post('/subscription/unsubscribe', {
+      const unsubscribing = await api.post('/subscription/unsubscribe', {
           channelId: videoDetail.channel
         },
         {withCredentials: true}
@@ -170,13 +168,12 @@ function VideoPlayerPage() {
           
             const fetchedUser = async() => {
               try {
-              await axios.get(`http://localhost:3000/api/users/${userId}`, {
+              const response = await axios.get(`http://localhost:3000/api/users/${userId}`, {
                 headers: {
                   'Content-Type': "application/json",
                   'Authorization': `Bearer ${accessToken}`
                 }
               })
-              .then(response => {
                 const allLikedVideo = response.data.data.likedVideos;
                 console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
                 if(allLikedVideo.includes(vidId)) {
@@ -193,7 +190,7 @@ function VideoPlayerPage() {
                 } else{
                   setIsDisliked(false)
                 }
-              })
+              
             
           } catch (err) {
             
