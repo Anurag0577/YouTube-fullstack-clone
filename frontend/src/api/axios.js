@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const api = axios.create({
+const api = axios.create({ // creating an instance of axios
   baseURL: "http://localhost:3000/api",
   withCredentials: true,
 });

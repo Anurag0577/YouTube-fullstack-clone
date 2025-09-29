@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react"
 import { AiOutlineEdit } from 'react-icons/ai';
+import api from "../api/axios";
 
 function EditPopup({videoId}){
     console.log(videoId)
@@ -9,22 +10,17 @@ function EditPopup({videoId}){
     const [videoThumbnail, setVideoThumbnail] = useState(videoId.thumbnailUrl)
 
     const updateVideoDetailHandler = async() => {
-        const accessToken = localStorage.getItem('accessToken');
-        await axios.put(`http://localhost:3000/api/videos/${videoId._id}`, {
+        try
+        {const res = await api.put(`/videos/${videoId._id}`, {
             title: videoTitle,
             description: videoDescription,
             thumbnailUrl: videoThumbnail
-        },
-        {
-        headers: {
-            "Content-Type" : "application/json",
-            "Authorization": `Bearer ${accessToken}`
+        })
+            console.log(res?.data?.data)}
+        catch(err){
+            console.error("Error updating video: " , err.response?.data || err.message)
         }
-        })
-        .then(res => {
-            console.log(res?.data?.data)
             const updateVideoDetail = res?.data?.data;
-        })
     }
     return(
         <>

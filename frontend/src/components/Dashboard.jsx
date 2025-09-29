@@ -11,7 +11,6 @@ import { AiOutlineDelete } from 'react-icons/ai';
 import EditPopup from "./EditPopup.jsx";
 import axios from "axios";
 import { FaWandMagicSparkles } from 'react-icons/fa6';
-import { Analytics } from "./Analytics.jsx";
 import { Customisation } from "./Customisation.jsx";
 import { Navigate } from 'react-router-dom';
 

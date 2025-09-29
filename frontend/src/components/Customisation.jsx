@@ -2,6 +2,7 @@ import { useState } from 'react'
 import coverMock from '../assets/coverMock.png'
 import axios from 'axios';
 // import '../assets/coverMock.png';
+import api from '../api/axios';
 
 function Customisation({isSidebarOpen, channelDetail}) {
     // useState to remember values b/w renders..
@@ -19,15 +20,9 @@ function Customisation({isSidebarOpen, channelDetail}) {
 
         if(selectedFile){
             const formData = new FormData();
-            const accessToken= localStorage.getItem('accessToken')
             formData.append('image', selectedFile);
             try{
-                const res = await axios.post('http://localhost:3000/api/upload/image/single', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
+                const res = await api.post('/upload/image/single', formData)
                 console.log(res.data.data.url);
                 setCoverUrl(res.data.data.url)
 
@@ -44,14 +39,9 @@ function Customisation({isSidebarOpen, channelDetail}) {
 
         if(selectedFile){
             const formData = new FormData();
-            const accessToken = localStorage.getItem('accessToken')
             formData.append('avatar', selectedFile);
             try{
-                const res = await axios.post('http://localhost:3000/api/upload/avatar', formData, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
+                const res = await api.post('/upload/avatar', formData)
 
                 console.log(res.data.data.url);
                 setChannelAvatar(res.data.data.url)
@@ -66,20 +56,13 @@ function Customisation({isSidebarOpen, channelDetail}) {
     }
 
     const updateChannelDetail = async() => {
-        const accessToken = localStorage.getItem('accessToken');
         try{
-            const res = await axios.put('http://localhost:3000/api/dashboard/channel', {
+            const res = await api.put('/dashboard/channel', {
                 channelName: name,
                 description,
                 avatar: channelAvatar,
                 cover: coverUrl
-            },
-            {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
-            }
-        })
+            })
             console.log(res.data.data);
         } catch(err){
             console.log(err)

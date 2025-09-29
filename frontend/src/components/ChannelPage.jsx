@@ -9,7 +9,7 @@ import {
   FaBellSlash
 } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
-
+import api from "../api/axios"; // make sure this is imported at the top
 // TimeAgo Component
 function TimeAgo({ timestamp }) {
   if (!timestamp) return null;
@@ -17,7 +17,6 @@ function TimeAgo({ timestamp }) {
     <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
   );
 }
-
 const ChannelPage = () => {
   const { channelId } = useParams();
   const navigate = useNavigate();
@@ -30,41 +29,15 @@ const ChannelPage = () => {
   const [subscribing, setSubscribing] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
 
-  // Get auth token from localStorage or your auth context
-  const getAuthToken = () => {
-    return localStorage.getItem('authToken') || localStorage.getItem('accessToken');
-  };
-
-  // Create axios instance with auth headers
-  const createAxiosConfig = () => {
-    const token = getAuthToken();
-    return {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      }
-    };
-  };
-
   useEffect(() => {
     const fetchChannelData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // Fetch channel data
-        const channelResponse = await fetch(`http://localhost:3000/api/channel/${channelId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-
-        if (!channelResponse.ok) {
-          throw new Error(`Failed to fetch channel data: ${channelResponse.status} ${channelResponse.statusText}`);
-        }
-
-        const channelResult = await channelResponse.json();
+        // ✅ Fetch channel data
+        const channelResponse = await api.get(`/channel/${channelId}`);
+        const channelResult = channelResponse.data;
         
         if (channelResult && channelResult.data) {
           setChannelData(channelResult.data);
@@ -74,26 +47,19 @@ const ChannelPage = () => {
           throw new Error('Invalid response format');
         }
 
-        // Fetch subscription status if user is logged in
-        const token = getAuthToken();
-        if (token) {
-          try {
-            const subscriptionResponse = await axios.get(
-              `http://localhost:3000/api/subscription/status/${channelId}`,
-              createAxiosConfig()
-            );
-            
-            if (subscriptionResponse.data.success) {
-              setIsSubscribed(subscriptionResponse.data.data.isSubscribed);
-              // Update subscriber count from subscription status if available
-              if (subscriptionResponse.data.data.subscriberCount !== undefined) {
-                setSubscriberCount(subscriptionResponse.data.data.subscriberCount);
-              }
+        // ✅ Fetch subscription status (auth handled by interceptor)
+        try {
+          const subscriptionResponse = await api.get(`/subscription/status/${channelId}`);
+          
+          if (subscriptionResponse.data.success) {
+            setIsSubscribed(subscriptionResponse.data.data.isSubscribed);
+            if (subscriptionResponse.data.data.subscriberCount !== undefined) {
+              setSubscriberCount(subscriptionResponse.data.data.subscriberCount);
             }
-          } catch (subscriptionError) {
-            console.log('Not logged in or subscription check failed:', subscriptionError.message);
-            setIsSubscribed(false);
           }
+        } catch (subscriptionError) {
+          console.log('Not logged in or subscription check failed:', subscriptionError.message);
+          setIsSubscribed(false);
         }
       } catch (error) {
         console.error('Error fetching channel data:', error);
@@ -127,28 +93,15 @@ const ChannelPage = () => {
     navigate(`/video/${video._id}`);
   };
 
-  // Subscribe handler
+  // ✅ Subscribe handler
   const subscribeHandler = async () => {
-    const token = getAuthToken();
-    if (!token) {
-      alert('Please login to subscribe to channels');
-      // You might want to redirect to login page
-      // navigate('/login');
-      return;
-    }
-
     try {
       setSubscribing(true);
-      const response = await axios.post(
-        'http://localhost:3000/api/subscription/subscribe',
-        { channelId },
-        createAxiosConfig()
-      );
+      const response = await api.post('/subscription/subscribe', { channelId });
       
       if (response.data.success) {
         setIsSubscribed(true);
         setSubscriberCount(response.data.data.subscriberCount);
-        // Show success message
         console.log('Successfully subscribed!');
       }
     } catch (error) {
@@ -160,26 +113,15 @@ const ChannelPage = () => {
     }
   };
 
-  // Unsubscribe handler
+  // ✅ Unsubscribe handler
   const unsubscribeHandler = async () => {
-    const token = getAuthToken();
-    if (!token) {
-      alert('Please login first');
-      return;
-    }
-
     try {
       setSubscribing(true);
-      const response = await axios.post(
-        'http://localhost:3000/api/subscription/unsubscribe',
-        { channelId },
-        createAxiosConfig()
-      );
+      const response = await api.post('/subscription/unsubscribe', { channelId });
       
       if (response.data.success) {
         setIsSubscribed(false);
         setSubscriberCount(response.data.data.subscriberCount);
-        // Show success message
         console.log('Successfully unsubscribed!');
       }
     } catch (error) {
@@ -190,6 +132,7 @@ const ChannelPage = () => {
       setSubscribing(false);
     }
   };
+
 
   if (loading) {
     return (

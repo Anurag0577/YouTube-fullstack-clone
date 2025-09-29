@@ -16,8 +16,7 @@ function Homepage() {
       const isSidebarOpen = useSelector((state) => state.sidebarHandler.value);
 
       useEffect(() => {
-        api
-          .get('/videos/allVideos?page=1&limit=30')
+        api.get('/videos/allVideos?page=1&limit=30')
           .then((response) => {
             setRandomVideos(response.data.data);
           })

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import api from "../api/axios";
 
 function VideoDetail({uploadVideoDetail, file, videoTitle, videoDescription, uploadedThumbnailDetail, setThumbnailImg, setVideoTitle, setVideoDescription, setUploadedThumbnailDetail}){
 
@@ -17,11 +18,7 @@ function VideoDetail({uploadVideoDetail, file, videoTitle, videoDescription, upl
         const formData = new FormData();
         formData.append('image', thumbnail);
 
-        axios.post('http://localhost:3000/api/upload/image/single', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        } )
+        api.post('/upload/image/single', formData )
         .then(res => {
             setUploadedThumbnailDetail(res.data)
         })

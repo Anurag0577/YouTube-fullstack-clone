@@ -4,6 +4,7 @@ import Button from './Button';
 import YouTubeLogo from '../assets/YouTube-Logo.png';
 import signupImage from '../assets/signup.jpg'
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios';
 
 function SignUp() {
     const [selectedAvatar, setSelectedAvatar] = useState(null);
@@ -66,14 +67,13 @@ function SignUp() {
             }
 
             // Use the correct backend API endpoint
-            const response = await fetch('http://localhost:3000/api/auth/signup', {
-                method: 'POST',
-                credentials: 'include', // CRITICAL: Include cookies in the request
-                body: formData,
-            });
+            const response = await api.post('/auth/signup', 
+                formData, 
+                {withCredentials: true}
+            );
 
-            if (response.ok) {
-                const data = await response.json();
+            if (response.status === 201) {
+                const data =  response.data;
                 console.log('Account created successfully:', data);
                 // Handle success (redirect, show message, etc.)
                 alert('Account created successfully!');
@@ -95,11 +95,7 @@ function SignUp() {
 
             navigate('/');
                 // You can redirect to login page or dashboard here
-            } else {
-                const errorData = await response.json();
-                console.error('Error creating account:', errorData);
-                alert(`Error: ${errorData.message || 'Failed to create account'}`);
-            }
+            } 
         } catch (error) {
             console.error('Error:', error);
             alert('Network error. Please try again.');

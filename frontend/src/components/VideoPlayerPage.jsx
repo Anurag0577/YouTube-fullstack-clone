@@ -10,6 +10,7 @@ import { AiFillLike } from 'react-icons/ai';
 import { BsShare } from 'react-icons/bs';
 import {jwtDecode} from "jwt-decode";
 import {toast, ToastContainer} from 'react-toastify'
+import api from "../api/axios.js";
 
 
 function VideoPlayerPage() {
@@ -29,27 +30,15 @@ function VideoPlayerPage() {
   // fetching video detail function
   const fetchChannelDetails = async(channelId) => {
         try{
-            await axios.get(`http://localhost:3000/api/channel/${channelId}`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+            await api.get(`/channel/${channelId}`)
       .then(res => {
 
         setChannelDetail(res.data.data);
-        
-            const accessToken = localStorage.getItem('accessToken');
-            if(accessToken){
-              try{
-                axios.get(`http://localhost:3000/api/subscription/status/${channelId}`,{
-                  headers: {
-                    "Content-Type" : 'application/json',
-                    "Authorization" : `Bearer ${accessToken}`
-                  }
-                })
-                .then(subscriptionRes => {
 
-                  if(res.data.success) {
+              try{
+                api.get(`/subscription/status/${channelId}`)
+                .then(subscriptionRes => {
+                  if(subscriptionRes.data.success) {
                     setIsSubscribed(subscriptionRes.data.data.isSubscribed);
 
                   }
@@ -57,7 +46,7 @@ function VideoPlayerPage() {
               } catch(err){
                 console.log(err)
               }
-            }
+            
             
       })
         } catch(err){
@@ -73,21 +62,13 @@ function VideoPlayerPage() {
     // fetch the clicked video details
     const fetchVideoDetails =() => {
       try {
-        axios.get(`http://localhost:3000/api/videos/${vidId}`, {
-          headers: {
-            "Content-Type": "application/json",
-          }
-        })
+        api.get(`/videos/${vidId}`)
         .then(response => {
           setVideoDetail(response.data.data || {});
           setLikes(response.data.data.likes);
                 setDislikes(response.data.data.dislikes);
           try {
-            axios.post(`http://localhost:3000/api/videos/${vidId}/view`, {}, {
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            })
+            api.post(`/videos/${vidId}/view`)
             .then(res => {
               console.log('view increased successfully!')
             })
@@ -113,14 +94,8 @@ function VideoPlayerPage() {
   const handleSubscribe = async() => {
     try{
       const accessToken = localStorage.getItem('accessToken') // get the accessTOKEN 
-    await axios.post('http://localhost:3000/api/subscription/subscribe',{
+    await api.post('/subscription/subscribe',{
       channelId : videoDetail.channel // passing the channel Id to backend
-    },
-    {
-      headers: {
-        "Content-Type" : 'application/json',
-        "Authorization" : `Bearer ${accessToken}`
-      }
     }
   )
   .then(res => {
@@ -139,14 +114,8 @@ function VideoPlayerPage() {
 
   const handleUnsubscribe = async() => {
     const accessToken = localStorage.getItem('accessToken');
-    const unsubscribing = await axios.post('http://localhost:3000/api/subscription/unsubscribe', {
+    const unsubscribing = await api.post('/subscription/unsubscribe', {
       channelId: videoDetail.channel
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      }
     }
   )
   if(unsubscribing.data.success){
@@ -168,12 +137,7 @@ function VideoPlayerPage() {
           
             const fetchedUser = async() => {
               try {
-              await axios.get(`http://localhost:3000/api/users/${userId}`, {
-                headers: {
-                  'Content-Type': "application/json",
-                  'Authorization': `Bearer ${accessToken}`
-                }
-              })
+              await api.get(`/users/${userId}`)
               .then(response => {
                 const allLikedVideo = response.data.data.likedVideos;
                 console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
@@ -206,12 +170,7 @@ function VideoPlayerPage() {
   const likeHandler = async() => {
     if(!isLiked){
         try {
-          const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseLike`, {}, {
-            headers: {
-              'Content-type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          })
+          const response = await api.post(`/engagement/${vidId}/increaseLike`)
           if(response.data.success){
             console.log('Video liked successfully!');
             // const userDetails = await axios.get(``)
@@ -233,12 +192,7 @@ function VideoPlayerPage() {
         }
     } else {
         try {
-          const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseLike`, {}, {
-            headers: {
-              'Content-type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          })
+          const response = await api.post(`/engagement/${vidId}/decreaseLike`)
           if(response.data.success){
             console.log('Video liked reset successfully!');
             // const userDetails = await axios.get(``)
@@ -257,12 +211,7 @@ function VideoPlayerPage() {
   const dislikeHandler = async() => {
     if(isDisliked){
           try {
-            const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/decreaseDislike`, {}, {
-              headers: {
-                'Content-type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            })
+            const response = await api.post(`/engagement/${vidId}/decreaseDislike`)
             if(response.data.success){
               console.log('Video disliked successfully!');
               setDislikes(dislikes - 1);
@@ -274,12 +223,7 @@ function VideoPlayerPage() {
           }
     } else{
           try {
-            const response = await axios.post(`http://localhost:3000/api/engagement/${vidId}/increaseDislike`, {}, {
-              headers: {
-                'Content-type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            })
+            const response = await api.post(`/engagement/${vidId}/increaseDislike`)
             if(response.data.success){
               console.log('Video disliked successfully!');
               setDislikes(dislikes + 1);

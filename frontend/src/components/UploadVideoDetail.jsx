@@ -10,6 +10,7 @@ import axios from 'axios';
 import Button from './Button';
 import VideoCheckStatus from './VideoCheckStatus';
 import YouTubePolicyAcceptance from './YouTubePolicyAcceptance ';
+import api from '../api/axios';
 
 function UploadVideoDetail({file}){
     const dispatch = useDispatch();
@@ -38,7 +39,7 @@ function UploadVideoDetail({file}){
         const formData = new FormData();
         formData.append('video', file);
 
-        axios.post('http://localhost:3000/api/upload/video', formData, {
+        api.post('/upload/video', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
@@ -58,28 +59,20 @@ function UploadVideoDetail({file}){
 
     const videoUploadHandler = async() => {
 
-        const accessToken = localStorage.getItem('accessToken');
         try {
             console.log('upload video ', uploadVideoDetail)
-            await axios.post('http://localhost:3000/api/videos/', {
-            title: videoTitle,
-            description: videoDescription,
-            videoUrl: uploadVideoDetail?.data?.url,
-            duration: uploadVideoDetail?.data?.duration,
-            thumbnailUrl: uploadedThumbnailDetail?.data.url
-            }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
-            }
+            const res = await api.post('/videos/', {
+                title: videoTitle,
+                description: videoDescription,
+                videoUrl: uploadVideoDetail?.data?.url,
+                duration: uploadVideoDetail?.data?.duration,
+                thumbnailUrl: uploadedThumbnailDetail?.data.url
             })
-            .then((res) => {
-            // Handle success, e.g. show a success message or redirect
             console.log('Video details saved:', res.data);
             dispatch(hide());
-            })
-            .catch((err) => {
-            // Handle error, e.g. show an error message
+            } catch (err) {
+            // Handle unexpected errors
+            console.error('Unexpected error:', err);
             if (err?.response?.status === 401) {
                 console.error('Unauthorized: Invalid or expired token');
                 // Optional: clear tokens so user can re-auth
@@ -87,10 +80,6 @@ function UploadVideoDetail({file}){
                 localStorage.removeItem('refreshToken');
             }
             console.error('Error saving video details:', err);
-            });
-        } catch (err) {
-            // Handle unexpected errors
-            console.error('Unexpected error:', err);
         }
     }
 

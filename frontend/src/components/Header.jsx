@@ -13,6 +13,7 @@ import { show } from '../slice/createVideoPopupShow.js';
 import { FaBars } from 'react-icons/fa6';
 import { showSidebar, hideSidebar } from '../slice/sidebarHandler.js';
 import { jwtDecode } from 'jwt-decode';
+import api from '../api/axios.js';
 
 function Header() {
   const [firstName, setFirstName] = useState('');
@@ -74,18 +75,19 @@ function Header() {
   async function logoutAccount() {
     try {
       // Call the logout API endpoint
-      const response = await fetch('http://localhost:3000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include', // CRITICAL: Send cookies to server
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await api.post('/auth/logout', {}, 
+        // method: 'POST',
+        // credentials: 'include', // CRITICAL: Send cookies to server
+        // headers: {
+        //   'Content-Type': 'application/json',
+        // },
+        {withCredentials: true}
+      );
 
-      if (response.ok) {
+      if (response.status === 200) {
         console.log('Logout successful');
       } else {
-        console.error('Logout failed:', response.statusText);
+        console.error('Logout failed:', response.status);
       }
     } catch (error) {
       console.error('Logout error:', error);

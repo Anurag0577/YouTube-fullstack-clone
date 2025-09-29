@@ -21,27 +21,18 @@ function Login() {
         setError('');
 
         try {
-            const response = await fetch("http://localhost:3000/api/auth/login", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json' // Fixed typo: was 'Context-Type'
-                },
-                credentials: 'include', // CRITICAL: Include cookies in the request
-                body: JSON.stringify({
-                    email,
-                    password
-                })
-            });
+            const response = await api.post("/auth/login", 
+                {email, password},
+                {withCredentials: true}
+            );
 
-            const data = await response.json();
-
-            if (!response.ok) {
+            const {data} = response;
+            if (response.status !== 201) {
                 throw new Error(data.message || 'Login failed');
             }
 
             console.log('Login successful:', data);
             
-            // Store both tokens
             if (data.data.accessToken) {
                 localStorage.setItem('accessToken', data.data.accessToken);
             }
