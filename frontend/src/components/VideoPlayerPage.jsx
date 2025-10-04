@@ -9,8 +9,8 @@ import { AiOutlineLike } from 'react-icons/ai';
 import { AiFillLike } from 'react-icons/ai';
 import { BsShare } from 'react-icons/bs';
 import {jwtDecode} from "jwt-decode";
-import {toast, ToastContainer} from 'react-toastify'
 import api from "../api/axios.js";
+import { toast, ToastContainer } from "react-toastify";
 
 
 function VideoPlayerPage() {
@@ -30,14 +30,23 @@ function VideoPlayerPage() {
   // fetching video detail function
   const fetchChannelDetails = async(channelId) => {
         try{
-            await api.get(`/channel/${channelId}`)
+            await axios.get(`http://localhost:3000/api/channel/${channelId}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
       .then(res => {
 
         setChannelDetail(res.data.data);
-
               try{
-                api.get(`/subscription/status/${channelId}`)
+                axios.get(`http://localhost:3000/api/subscription/status/${channelId}`,{
+                  headers: {
+                    "Content-Type" : 'application/json',
+                    "Authorization" : `Bearer ${localStorage.getItem('accessToken')}`
+                  }
+                })
                 .then(subscriptionRes => {
+
                   if(subscriptionRes.data.success) {
                     setIsSubscribed(subscriptionRes.data.data.isSubscribed);
 
@@ -62,13 +71,21 @@ function VideoPlayerPage() {
     // fetch the clicked video details
     const fetchVideoDetails =() => {
       try {
-        api.get(`/videos/${vidId}`)
+        axios.get(`http://localhost:3000/api/videos/${vidId}`, {
+          headers: {
+            "Content-Type": "application/json",
+          }
+        })
         .then(response => {
           setVideoDetail(response.data.data || {});
           setLikes(response.data.data.likes);
                 setDislikes(response.data.data.dislikes);
           try {
-            api.post(`/videos/${vidId}/view`)
+            axios.post(`http://localhost:3000/api/videos/${vidId}/view`, {}, {
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
             .then(res => {
               console.log('view increased successfully!')
             })
@@ -92,20 +109,24 @@ function VideoPlayerPage() {
       }, [videoDetail.channel])
 
   const handleSubscribe = async() => {
-    try{
-      const accessToken = localStorage.getItem('accessToken') // get the accessTOKEN 
-    await api.post('/subscription/subscribe',{
-      channelId : videoDetail.channel // passing the channel Id to backend
+    const isUserLogin = localStorage.getItem('accessToken');
+    if(!isUserLogin){
+      toast.info("Please login to subscribe this channel!!")
+      return;
     }
+    try{
+    const res = await api.post('/subscription/subscribe',{
+      channelId : videoDetail.channel // passing the channel Id to backend,
+    },
+    {withCredentials: true}
   )
-  .then(res => {
     if(res.data.success){
       setIsSubscribed(true)
       console.log('Channel Subscribed')
     }
-  })
     } catch(err){
-      console.log('error', err)
+      console.log('error', err.response.data.message)
+      toast.info(err.response.data.message)
     }
 
     if (videoDetail.channel) fetchChannelDetails(videoDetail.channel);
@@ -113,15 +134,25 @@ function VideoPlayerPage() {
   }
 
   const handleUnsubscribe = async() => {
-    const accessToken = localStorage.getItem('accessToken');
-    const unsubscribing = await api.post('/subscription/unsubscribe', {
-      channelId: videoDetail.channel
+    const isUserLogin = localStorage.getItem('accessToken');
+    if(!isUserLogin){
+      toast.info("Please login to unsubscribe this channel!!")
+      return;
     }
-  )
-  if(unsubscribing.data.success){
-    setIsSubscribed(false);
-    console.log('Channel unsubscribed!')
-  }
+    try {
+      const unsubscribing = await api.post('/subscription/unsubscribe', {
+          channelId: videoDetail.channel
+        },
+        {withCredentials: true}
+      )
+      if(unsubscribing.data.success){
+        setIsSubscribed(false);
+        console.log('Channel unsubscribed!')
+      }
+    } catch (error) {
+      console.log('error',error )
+    }
+    
   }
 
   const handleSubscription = () => {
@@ -137,8 +168,12 @@ function VideoPlayerPage() {
           
             const fetchedUser = async() => {
               try {
-              await api.get(`/users/${userId}`)
-              .then(response => {
+              const response = await axios.get(`http://localhost:3000/api/users/${userId}`, {
+                headers: {
+                  'Content-Type': "application/json",
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              })
                 const allLikedVideo = response.data.data.likedVideos;
                 console.log('VideoId available in the alllikeVideo', allLikedVideo.includes(vidId))
                 if(allLikedVideo.includes(vidId)) {
@@ -155,7 +190,7 @@ function VideoPlayerPage() {
                 } else{
                   setIsDisliked(false)
                 }
-              })
+              
             
           } catch (err) {
             
@@ -168,6 +203,11 @@ function VideoPlayerPage() {
 
   // LIKE A VIDEO
   const likeHandler = async() => {
+    const isUserLogin = localStorage.getItem('accessToken');
+    if(!isUserLogin){
+      toast.info("Please login to like this video!!")
+      return;
+    }
     if(!isLiked){
         try {
           const response = await api.post(`/engagement/${vidId}/increaseLike`)
@@ -209,6 +249,11 @@ function VideoPlayerPage() {
 
   // DISLIKE THE CURRENT VIDEO
   const dislikeHandler = async() => {
+    const isUserLogin = localStorage.getItem('accessToken');
+    if(!isUserLogin){
+      toast.info("Please login to dislike this video!!")
+      return;
+    }
     if(isDisliked){
           try {
             const response = await api.post(`/engagement/${vidId}/decreaseDislike`)
@@ -346,6 +391,9 @@ function VideoPlayerPage() {
           </div>
         </div>
       </div>
+      <ToastContainer
+      position="bottom-center"
+      />
     </>
   );
 }
