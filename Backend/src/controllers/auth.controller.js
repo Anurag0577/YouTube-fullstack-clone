@@ -120,6 +120,7 @@ const registerUser = asyncHandler(async(req, res, next) => {
     }));
 })
 
+//LOGIN USERs
 const loginUser = asyncHandler(async(req, res, next) => {
     const {email, password} = req.body;
 
@@ -167,6 +168,7 @@ const loginUser = asyncHandler(async(req, res, next) => {
         firstName: loginUser.firstName,
         lastName: loginUser.lastName,
         avatar: loginUser.avatar,
+        channel: loginUser.channel,
         accessToken
     };
 

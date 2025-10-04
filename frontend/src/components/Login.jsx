@@ -3,6 +3,7 @@ import Button from './Button';
 import YouTubeLogo from '../assets/YouTube-Logo.png';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios.js'
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -27,9 +28,6 @@ function Login() {
             );
 
             const {data} = response;
-            if (response.status !== 201) {
-                throw new Error(data.message || 'Login failed');
-            }
 
             console.log('Login successful:', data);
             
@@ -44,7 +42,8 @@ function Login() {
                 email: data.data.email,
                 firstName: data.data.firstName,
                 lastName: data.data.lastName,
-                avatar: data.data.avatar
+                avatar: data.data.avatar,
+                channel: data.data.channel
             }));
 
             navigate('/');

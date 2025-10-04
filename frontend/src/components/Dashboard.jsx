@@ -13,6 +13,7 @@ import axios from "axios";
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { Customisation } from "./Customisation.jsx";
 import { Navigate } from 'react-router-dom';
+import { CreateChannel } from "./CreateChannel.jsx";
 
 function Dashboard() {
   const [videos, setVideos] = useState([])
@@ -21,6 +22,8 @@ function Dashboard() {
   const [channelDetail, setChannelDetail] = useState(false)
   const isSidebarOpen = useSelector((state) => state.sidebarHandler.value)
   const [componentShow, setComponentShow] = useState('Content')
+  const [isCreatePopOpen, setIsCreatePopOpen] = useState(false)
+  const [doesUserHaveChannel, setDoesUserHaveChannel] = useState(null)
   const createVideoPopup = useSelector(
     (state) => state.createVideoPopup.value
   );
@@ -39,6 +42,12 @@ function Dashboard() {
         })
         .then(res => {
           channelID = res.data.data.channel;
+          console.log('This is the channelId fetched by the first useEffect', channelID)
+          if(channelID === null){
+            setDoesUserHaveChannel(false)
+          }else{
+            setDoesUserHaveChannel(true)
+          }
         })
         .catch(err => console.log(err))
       }
@@ -105,6 +114,19 @@ function Dashboard() {
 
   return (
     <>
+    {!doesUserHaveChannel? (
+      <div className="flex flex-col w-full h-screen">
+        <Headers/>
+        <div className="flex flex-col text-center justify-center w-full h-full mt-16 ">
+          <h1 className="text-2xl" >You don't have channel? First you have to create it.</h1>
+          <p className="text-[12px] mb-5">If you want to explore the chanel Dashboard or create content than you have to create a channel first.</p>
+          <button className="btn-primary min-h-9 max-w-fit mx-auto cursor-pointer pt-1.5 pr-3 pb-1.5 pl-3 rounded-2xl bg-gray-200 flex" onClick={() => setIsCreatePopOpen(true)}>Create Channel</button>
+        </div>
+
+      </div>
+    ) 
+    :
+    (
       <div className="flex flex-col w-full h-screen">
         <Headers/>
           <div className="flex w-full h-full mt-16">
@@ -149,7 +171,6 @@ function Dashboard() {
                                   </div>
                         
                                 </div>)
-                        
                                 }
         
         {componentShow === 'Content' && (
@@ -169,9 +190,7 @@ function Dashboard() {
           </div>   
         </div>
           ) 
-          
         }
-
         {componentShow==='Analytics' && <Analytics/> }
         {componentShow === 'Customisation' && <Customisation isSidebarOpen={isSidebarOpen} channelDetail = {channelDetail} /> }
         
@@ -179,6 +198,28 @@ function Dashboard() {
         {/* SideBar */}
         
       </div>
+    )
+      }
+
+      {isCreatePopOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
+          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl h-[90%] flex flex-col">
+            
+            {/* Close Button */}
+            <div 
+              className="absolute top-4 right-4 text-3xl cursor-pointer text-white hover:scale-105"
+              onClick={() => setIsCreatePopOpen(false)}
+            >
+              <AiOutlineCloseCircle />
+            </div>
+
+            {/* Content (scrollable inside popup) */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <CreateChannel />
+            </div>
+          </div>
+        </div>
+      )}
 
       {createVideoPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
@@ -198,7 +239,6 @@ function Dashboard() {
           </div>
         </div>
       )}
-      
     </>
   );
 }

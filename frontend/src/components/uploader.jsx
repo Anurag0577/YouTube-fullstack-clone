@@ -5,7 +5,7 @@ import { hide } from '../slice/createVideoPopupShow';
 import Button from './Button';
 import { useState } from 'react';
 import axios from 'axios';
-import SelectFile from './selectFile';
+import SelectFile from './SelectFile';
 import UploadVideoDetail from './UploadVideoDetail';
 import { TbRuler2Off } from 'react-icons/tb';
 
