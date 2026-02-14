@@ -133,6 +133,12 @@ const getSubscriptionStatus = asyncHandler(async(req, res) => {
     );
 });
 
+// Get subscription videos
+const getSubscriptionVideos = asyncHandler(async(req, res) => {
+    const userId = req?.headers?.userId;
+    
+})
+
 // Get user's subscriptions
 const getUserSubscriptions = asyncHandler(async(req, res) => {
     if (!req.user || !req.user._id) {

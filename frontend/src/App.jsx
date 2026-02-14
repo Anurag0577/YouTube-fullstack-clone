@@ -1,6 +1,3 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import Login from './components/Login.jsx'
 import SignUp from './components/SignUp.jsx'
@@ -13,6 +10,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PageNotFound from './components/PageNotFound.jsx'
 import ChannelPage from './components/ChannelPage.jsx'
 import ProtectedRoutes from './components/ProtectedRoutes.jsx'
+import Subscription from './components/Subscription.jsx'
 
 
 function App() {
@@ -44,6 +42,10 @@ function App() {
     {
       path: "/videos/player/:vidId",
       element: <VideoPlayerPage/>
+    },
+    {
+      path: '/subscription',
+      element: <Subscription/>
     }
   ])
 

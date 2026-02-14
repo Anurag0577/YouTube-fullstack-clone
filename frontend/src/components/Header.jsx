@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import Button from './Button.jsx';
 import { useNavigate } from 'react-router-dom';
 import { AiOutlinePlus } from 'react-icons/ai';
@@ -10,9 +11,10 @@ import { FiSettings } from 'react-icons/fi';
 import { TbReportAnalytics } from 'react-icons/tb';
 import { useDispatch, useSelector } from 'react-redux';
 import { show } from '../slice/createVideoPopupShow.js';
+import { fetchUserDetails } from '../slice/authSlice.js';
 import { FaBars } from 'react-icons/fa6';
 import { showSidebar, hideSidebar } from '../slice/sidebarHandler.js';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import api from '../api/axios.js';
 
 function Header() {
@@ -23,7 +25,7 @@ function Header() {
   const [isUserLogin, setIsUserLogin] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const fetchUserInfo = useSelector(state => state.userInfo.data)
   const currentSidebarState = useSelector(state => state.sidebarHandler.value)
 
   useEffect(() => {
@@ -35,6 +37,12 @@ function Header() {
     if (tokenExpiry && currentTime > tokenExpiry) {
       // Token has expired
       localStorage.removeItem('accessToken');
+    }
+    // If we have a token, dispatch to populate user info in Redux
+    if (token && decodedToken) {
+      const userId = decodedToken?._id || decodedToken?.sub || decodedToken?.userId;
+      console.log("Decoded Token:", decodedToken, "Extracted User ID:", userId);
+      if (userId) dispatch(fetchUserDetails(userId));
     }
     if (user) {
       try {
@@ -65,11 +73,21 @@ function Header() {
       setUsername('');
       setAvatar('');
     }
-  }, []);
+    // (fetch dispatched above when token & decodedToken exist)
+  }, [dispatch]);
 
   function createVideo() {
-    navigate('/channel-dashboard');
-    dispatch(show());
+    // check whether user have channel or not, if no then navigate to create channel page, if yes then open create video popup.
+    const hasChannel = Boolean(fetchUserInfo && (fetchUserInfo.channel || fetchUserInfo.channelId || fetchUserInfo.channels?.length));
+    console.log("fetchUserInfo: ", fetchUserInfo, "hasChannel:", hasChannel)
+    if (hasChannel) {
+      dispatch(show());
+      navigate('/channel-dashboard');
+    } else {
+      toast.info('You need a channel to create videos. Create one now.');
+      navigate('/channel-dashboard');
+    }
+    
   }
 
   async function logoutAccount() {
