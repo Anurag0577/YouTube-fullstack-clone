@@ -1,16 +1,17 @@
 import { IoCloseCircleOutline } from 'react-icons/io5';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { hide } from '../slice/createVideoPopupShow';
+import { hide } from '../slice/createVideoPopupShow.js';
 import { HiUpload } from 'react-icons/hi';
 import { MdOutlineHd } from 'react-icons/md';
 import { FaRegCheckCircle } from 'react-icons/fa';
-import VideoDetail from './VideoDetail';
+import VideoDetail from './VideoDetail.jsx';
 import axios from 'axios';
 import Button from './Button';
 import VideoCheckStatus from './VideoCheckStatus';
-import YouTubePolicyAcceptance from './YouTubePolicyAcceptance ';
-import api from '../api/axios';
+import YouTubePolicyAcceptance from './YouTubePolicyAcceptance .jsx'
+import api from '../api/axios.js';
+import { fetchChannelInfo } from '../slice/channelSlice.js';
 
 function UploadVideoDetail({file}){
     const dispatch = useDispatch();
@@ -70,6 +71,10 @@ function UploadVideoDetail({file}){
             })
             console.log('Video details saved:', res.data);
             dispatch(hide());
+            console.log('Before dispatch(fetchChannelInfo())' )
+            dispatch(fetchChannelInfo(uploadVideoDetail?.data))
+            
+            console.log('After dispatch(fetchChannelInfo())')
             } catch (err) {
             // Handle unexpected errors
             console.error('Unexpected error:', err);

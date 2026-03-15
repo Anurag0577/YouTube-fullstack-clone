@@ -26,7 +26,7 @@ const dispatch = useDispatch();
 
     return(
         <>
-            <div className="h-[650px] w-full flex flex-col justify-between">
+            <div className="h-full w-full flex flex-col justify-between">
                 <div className="uploader-header h-12 w-full flex justify-between items-center pl-6 pr-6 border-b-1 border-gray-300 ">
                     <h1 className=" text-2xl font-semibold">Upload Videos</h1>
                     <div className='text-2xl text-gray-600 cursor-pointer' onClick={() => {

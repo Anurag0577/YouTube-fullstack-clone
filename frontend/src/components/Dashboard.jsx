@@ -1,247 +1,229 @@
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Uploader from "./uploader";
-import { useEffect, useState } from "react";
-import Headers from '../components/Header.jsx'
-import { HiOutlineVideoCamera } from 'react-icons/hi2';
-import { AiOutlineCloseCircle } from 'react-icons/ai';
-import { IoAnalyticsSharp } from 'react-icons/io5';
-import {jwtDecode} from 'jwt-decode';
-import { AiOutlineEdit } from 'react-icons/ai';
-import { AiOutlineDelete } from 'react-icons/ai';
-import EditPopup from "./EditPopup.jsx";
+import { jwtDecode } from 'jwt-decode';
 import axios from "axios";
-import { FaWandMagicSparkles } from 'react-icons/fa6';
-import { Customisation } from "./Customisation.jsx";
 import { Navigate } from 'react-router-dom';
+
+// Icons
+import { HiOutlineVideoCamera } from 'react-icons/hi2';
+import { AiOutlineCloseCircle, AiOutlineEdit, AiOutlineDelete } from 'react-icons/ai';
+import { IoAnalyticsSharp } from 'react-icons/io5';
+import { FaWandMagicSparkles } from 'react-icons/fa6';
+
+// Components
+import Uploader from "./uploader";
+import Headers from '../components/Header.jsx';
+import EditPopup from "./EditPopup.jsx";
+import { Customisation } from "./Customisation.jsx";
 import { CreateChannel } from "./CreateChannel.jsx";
+import { fetchChannelInfo } from '../slice/channelSlice.js';
 
 function Dashboard() {
-  const [videos, setVideos] = useState([])
-  const [videoId, setVideoId] = useState('')
-  const [isEditPopOpen, setIsEditPopOpen] = useState(false)
-  const [channelDetail, setChannelDetail] = useState(false)
-  const isSidebarOpen = useSelector((state) => state.sidebarHandler.value)
-  const [componentShow, setComponentShow] = useState('Content')
-  const [isCreatePopOpen, setIsCreatePopOpen] = useState(false)
-  const [doesUserHaveChannel, setDoesUserHaveChannel] = useState(null)
-  const createVideoPopup = useSelector(
-    (state) => state.createVideoPopup.value
-  );
+  const dispatch = useDispatch();
+  
+  // 1. Redux State Selection
+  // Ensure 'fetchChannelInfo' matches the key in your store.js reducer object
+  const channelState = useSelector((state) => state.fetchChannelInfo);
+  const isSidebarOpen = useSelector((state) => state.sidebarHandler.value);
+  const createVideoPopup = useSelector((state) => state.createVideoPopup.value);
 
+  // Derived State
+  const videos = channelState?.data?.videos || [];
+  const channelDetail = channelState?.data || null;
+
+  // 2. Local UI State
+  const [videoId, setVideoId] = useState('');
+  const [isEditPopOpen, setIsEditPopOpen] = useState(false);
+  const [componentShow, setComponentShow] = useState('Content');
+  const [isCreatePopOpen, setIsCreatePopOpen] = useState(false);
+  const [doesUserHaveChannel, setDoesUserHaveChannel] = useState(null);
+
+  // 3. Fetch User and Channel Logic
   useEffect(() => {
-    
-    const channelDetail = async() => {
-      let channelID = '';
+    const initializeDashboard = async () => {
       const accessToken = localStorage.getItem('accessToken');
-      if(accessToken){
-        const decodedToken = jwtDecode(accessToken);
-      const userID = decodedToken._id;
-        await axios.get(`http://localhost:3000/api/users/${userID}`,{
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        .then(res => {
-          channelID = res.data.data.channel;
-          console.log('This is the channelId fetched by the first useEffect', channelID)
-          if(channelID === null){
-            setDoesUserHaveChannel(false)
-          }else{
-            setDoesUserHaveChannel(true)
-          }
-        })
-        .catch(err => console.log(err))
-      }
-      if(!accessToken){
-          throw new Error('Authentication required. Please login again.');
-          <Navigate to="/login" replace />;
-      }
       
+      if (!accessToken) {
+        console.error('No access token found');
+        return; 
+      }
 
-        await axios.get(`http://localhost:3000/api/channel/${channelID}`, {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        const userID = decodedToken._id;
+
+        // Fetch user to get their channel ID
+        const res = await axios.get(`http://localhost:3000/api/users/${userID}`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const activeChannelID = res.data.data.channel;
+
+        if (!activeChannelID) {
+          setDoesUserHaveChannel(false);
+        } else {
+          setDoesUserHaveChannel(true);
+          // DISPATCH: Now we definitely have the ID
+          dispatch(fetchChannelInfo(activeChannelID));
+        }
+      } catch (err) {
+        console.error('Dashboard Init Error:', err);
+      }
+    };
+
+    initializeDashboard();
+  }, [dispatch]);
+
+  // 4. Action Handlers
+  const videoEditHandler = (clickedVideoDetail) => {
+    setVideoId(clickedVideoDetail);
+    setIsEditPopOpen(!isEditPopOpen);
+  };
+
+  const videoDeleteHandler = async (currentVideoId) => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) return;
+
+    if (window.confirm("Are you sure you want to delete this video?")) {
+      try {
+        await axios.delete(`http://localhost:3000/api/videos/${currentVideoId}`, {
           headers: {
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
-        })
-        .then(res => {
-          setVideos(res.data.data.videos)
-          setChannelDetail(res.data.data)
-        })
-        .catch(err => console.log(err))
-      
+        });
+
+        // Refresh Redux store after deletion
+        if (channelDetail?._id) {
+          dispatch(fetchChannelInfo(channelDetail._id));
+        }
+      } catch (error) {
+        console.error('Delete error:', error.response?.data?.message || error.message);
+      }
     }
-    channelDetail();
-   }, [])
+  };
 
-
-   const videoEditHandler = (clickedVideoDetail) => {
-    setVideoId(clickedVideoDetail);
-    if(isEditPopOpen){
-      setIsEditPopOpen(false)
-    } else{
-      setIsEditPopOpen(true)
-    }
-   }
-
-   const videoDeleteHandler = async(currentVideoId) => {
-    const accessToken = localStorage.getItem('accessToken');
-    
-    if(!accessToken){
-        throw new Error('Authentication required. Please login again.');
-    }
-
-    try {
-        const { data } = await axios.delete(
-            `http://localhost:3000/api/videos/${currentVideoId}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        console.log('Video deleted successfully:', data.data);
-        setVideos(prevVideos => prevVideos.filter(video => video._id !== currentVideoId));
-        return { success: true, ...data };
-
-    } catch (error) {
-        const errorMessage = error.response?.data?.message || 'Failed to delete video';
-        console.error('Delete video error:', errorMessage);
-        throw new Error(errorMessage);
-    }
-};
-
+  // 5. Render Logic
+  if (doesUserHaveChannel === null && channelState.loading) {
+    return <div className="h-screen w-full flex items-center justify-center">Loading Dashboard...</div>;
+  }
 
   return (
     <>
-    {!doesUserHaveChannel? (
-      <div className="flex flex-col w-full h-screen">
-        <Headers/>
-        <div className="flex flex-col text-center justify-center w-full h-full mt-16 ">
-          <h1 className="text-2xl" >You don't have channel? First you have to create it.</h1>
-          <p className="text-[12px] mb-5">If you want to explore the chanel Dashboard or create content than you have to create a channel first.</p>
-          <button className="btn-primary min-h-9 max-w-fit mx-auto cursor-pointer pt-1.5 pr-3 pb-1.5 pl-3 rounded-2xl bg-gray-200 flex" onClick={() => setIsCreatePopOpen(true)}>Create Channel</button>
-        </div>
-
-      </div>
-    ) 
-    :
-    (
-      <div className="flex flex-col w-full h-screen">
-        <Headers/>
-          <div className="flex w-full h-full mt-16">
-        {isSidebarOpen ? (
-                                  <div className="sideBar-container fixed min-w-[200px] h-[100vh] text-black bg-white flex flex-col">
-                                  {/* Sidebar Items */}
-                                  <div className="sidebar-item-container flex-1">
-
-                                    <ul className="space-y-2 p-4">
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Content')}>
-                                        <HiOutlineVideoCamera className="text-2xl mr-2"/>
-                                        Content
-                                      </li>
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Analytics')}>
-                                        <IoAnalyticsSharp className="text-2xl mr-2"/>
-                                        Analytics
-                                      </li>
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition" onClick={() => setComponentShow('Customisation')}>
-                                        <FaWandMagicSparkles className="text-2xl mr-2"/>
-                                        Customisation 
-                                      </li>
-                                    </ul>
-                                  </div>
-                        
-                                  {/* Footer (optional) */}
-                                  <div className="p-4 border-t border-gray-700 text-xs text-gray-400">
-                                    © 2025 My App
-                                  </div>
-                                </div>) 
-                                :
-                                (<div className="sideBar-container fixed min-w-[50px] h-[100vh] text-black bg-white flex flex-col ">
-                                  {/* Sidebar Items */}
-                                  <div className="sidebar-item-container flex-1">
-                                    <ul className="space-y-2 p-4">
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition">
-                                        <HiOutlineVideoCamera className="text-2xl "/>
-                                      </li>
-                                      <li className="px-4 py-2 rounded flex hover:bg-black hover:text-white cursor-pointer transition">
-                                        <IoAnalyticsSharp className="text-2xl "/>
-                                      </li>
-                                    </ul>
-                                  </div>
-                        
-                                </div>)
-                                }
-        
-        {componentShow === 'Content' && (
-            <div className={`flex-1 ${isSidebarOpen ? 'ml-[200px]' : 'ml-[100px]'} min-h-screen transition-all duration-300 mr-10 mb-10`}>
-          <h1 className="text-2xl mb-5 font-bold ">Channel Content</h1>
-          <div className="w-full flex flex-col gap-2">
-                {videos.map(video => (
-                  <div className="w-full flex justify-start items-center rounded-[5px] gap-5 border-gray-200 border hover:border-black">
-                    <div className="h-[60px] aspect-video "><img className="h-full w-full rounded-[5px] " src={video.thumbnailUrl}></img></div>
-                    <h1 className="flex-1">{video.title}</h1>
-                    <div className={"flex"} >
-                      <div className="text-2xl py-2 px-5 mr-5 hover:bg-black hover:text-white hover:rounded-[5px]" onClick={() => (videoEditHandler(video))}><AiOutlineEdit/></div>
-                      <div className="text-2xl py-2 px-5 mr-5 hover:bg-black hover:text-white hover:rounded-[5px]" onClick={() => (videoDeleteHandler(video._id))}><AiOutlineDelete/></div>
-                    </div>
-                  </div>
-                ))}
-          </div>   
-        </div>
-          ) 
-        }
-        {componentShow==='Analytics' && <Analytics/> }
-        {componentShow === 'Customisation' && <Customisation isSidebarOpen={isSidebarOpen} channelDetail = {channelDetail} /> }
-        
-        </div>
-        {/* SideBar */}
-        
-      </div>
-    )
-      }
-
-      {isCreatePopOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl h-[90%] flex flex-col">
-            
-            {/* Close Button */}
-            <div 
-              className="absolute top-4 right-4 text-3xl cursor-pointer text-white hover:scale-105"
-              onClick={() => setIsCreatePopOpen(false)}
+      {!doesUserHaveChannel ? (
+        <div className="flex flex-col w-full h-screen">
+          <Headers />
+          <div className="flex flex-col text-center justify-center w-full h-full mt-16 ">
+            <h1 className="text-2xl">You don't have a channel yet.</h1>
+            <p className="text-[12px] mb-5">Create a channel to start managing your content.</p>
+            <button 
+              className="px-6 py-2 rounded-2xl bg-gray-200 hover:bg-black hover:text-white transition" 
+              onClick={() => setIsCreatePopOpen(true)}
             >
-              <AiOutlineCloseCircle />
+              Create Channel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col w-full h-screen">
+          <Headers />
+          <div className="flex w-full h-full mt-16">
+            
+            {/* Sidebar */}
+            <div className={`${isSidebarOpen ? 'min-w-[200px]' : 'min-w-[80px]'} fixed h-full bg-white border-r border-gray-200 transition-all duration-300`}>
+              <ul className="space-y-2 p-4">
+                <li 
+                  className="p-3 rounded flex items-center hover:bg-black hover:text-white cursor-pointer transition" 
+                  onClick={() => setComponentShow('Content')}
+                >
+                  <HiOutlineVideoCamera className="text-2xl mr-2" />
+                  {isSidebarOpen && "Content"}
+                </li>
+                <li 
+                  className="p-3 rounded flex items-center hover:bg-black hover:text-white cursor-pointer transition" 
+                  onClick={() => setComponentShow('Analytics')}
+                >
+                  <IoAnalyticsSharp className="text-2xl mr-2" />
+                  {isSidebarOpen && "Analytics"}
+                </li>
+                <li 
+                  className="p-3 rounded flex items-center hover:bg-black hover:text-white cursor-pointer transition" 
+                  onClick={() => setComponentShow('Customisation')}
+                >
+                  <FaWandMagicSparkles className="text-2xl mr-2" />
+                  {isSidebarOpen && "Customisation"}
+                </li>
+              </ul>
             </div>
 
-            {/* Content (scrollable inside popup) */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              <CreateChannel />
+            {/* Main Content Area */}
+            <div className={`flex-1 ${isSidebarOpen ? 'ml-[200px]' : 'ml-[80px]'} p-8 transition-all duration-300`}>
+              {componentShow === 'Content' && (
+                <div>
+                  <h1 className="text-2xl mb-5 font-bold">Channel Content</h1>
+                  <div className="w-full flex flex-col gap-3">
+                    {videos.map(video => (
+                      <div key={video._id} className="w-full flex justify-between items-center p-2 rounded-lg border border-gray-200 hover:border-black transition">
+                        <div className="flex items-center gap-5">
+                          <img className="h-[60px] aspect-video rounded object-cover" src={video.thumbnailUrl} alt={video.title} />
+                          <h1 className="font-medium">{video.title}</h1>
+                        </div>
+                        <div className="flex gap-2">
+                          <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoEditHandler(video)}>
+                            <AiOutlineEdit className="text-xl" />
+                          </button>
+                          <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoDeleteHandler(video._id)}>
+                            <AiOutlineDelete className="text-xl" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {componentShow === 'Analytics' && <div>Analytics Component Here</div>}
+              {componentShow === 'Customisation' && <Customisation channelDetail={channelDetail} />}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Popups */}
+      {isCreatePopOpen && (
+        <PopupWrapper close={() => setIsCreatePopOpen(false)}>
+          <CreateChannel />
+        </PopupWrapper>
       )}
 
       {createVideoPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-4 md:p-6 transition-all h-[90%]">
-            <Uploader />
-          </div>
-        </div>
+        <PopupWrapper close={() => { /* Handle via Redux */ }}>
+          <Uploader />
+        </PopupWrapper>
       )}
+
       {isEditPopOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-2 md:p-6 transition-all h-[90%]">
-            <div className="w-full flex justify-between mb-5">
-              <h1 className="text-2xl font-bold">Update Video Details</h1>
-              <AiOutlineCloseCircle className="text-3xl text-right right-0 cursor-pointer hover:scale-105" onClick={() => setIsEditPopOpen(false)}/>
-            </div>
-            <EditPopup videoId = {videoId}/>
-          </div>
-        </div>
+        <PopupWrapper close={() => setIsEditPopOpen(false)} title="Update Video Details">
+          <EditPopup videoId={videoId} />
+        </PopupWrapper>
       )}
     </>
   );
 }
+
+// Helper component to keep popup code dry
+const PopupWrapper = ({ children, close, title }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
+    <div className="bg-white rounded-2xl shadow-lg w-full max-w-3xl h-[90%] flex flex-col p-6">
+      <div className="flex justify-between items-center mb-4">
+        {title && <h1 className="text-2xl font-bold">{title}</h1>}
+        <AiOutlineCloseCircle className="text-3xl cursor-pointer hover:scale-110" onClick={close} />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {children}
+      </div>
+    </div>
+  </div>
+);
 
 export default Dashboard;

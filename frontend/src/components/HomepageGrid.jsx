@@ -41,11 +41,12 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
             <div 
               key={video._id}
               className="video-card group cursor-pointer"
+              // add onClick on div not on the image
               onClick={() => videoClickHandler(video)}
             >
               <div className="relative overflow-hidden rounded-xl">
                 <img
-                  className="w-full aspect-video object-cover transition-transform duration-200 group-hover:scale-105"
+                  className="w-full object-cover transition-transform duration-200 group-hover:scale-105 aspect-video"
                   src={video?.thumbnailUrl}
                   alt={video?.title || 'Video thumbnail'}
                 />
@@ -57,7 +58,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
               </div>
 
               <div className="mt-3 flex gap-3">
-                {/* ✅ Put onClick on container div, not img */}
+                
                 <div 
                   className="flex-shrink-0"
                   onClick={(event) => {
@@ -87,11 +88,10 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
                 </div>
 
                 <div className="flex-1 min-w-0 leading-tight">
-                  <h3 className="font-medium text-sm md:text-base leading-tight text-gray-900 line-clamp-2">
+                  <h3 className="">
                     {video?.title || 'Untitled'}
                   </h3>
                   
-                  {/* ✅ Make channel name clickable */}
                   <p 
                     className="text-gray-600 text-xs md:text-sm mt-1 hover:text-gray-900 transition-colors cursor-pointer"
                     onClick={(event) => {
