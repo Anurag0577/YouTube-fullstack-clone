@@ -1,6 +1,7 @@
 import React from 'react'
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { BsThreeDotsVertical } from "react-icons/bs";
 
 function TimeAgo({ timestamp }) {
   return (
@@ -27,13 +28,13 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8">
+    <div className=" pt-1 md:pt-1 lg:p-8 lg:pt-2">
       <div className="grid gap-4 md:gap-6 
                       grid-cols-1 
                       sm:grid-cols-2 
                       lg:grid-cols-3 
-                      xl:grid-cols-4 
-                      2xl:grid-cols-5
+                      xl:grid-cols-3 
+                      2xl:grid-cols-3
                       auto-rows-max">
         {videos.map((video) => {
           const durationLabel = formatDuration(video?.duration);
@@ -46,7 +47,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
             >
               <div className="relative overflow-hidden rounded-xl">
                 <img
-                  className="w-full object-cover transition-transform duration-200 group-hover:scale-105 aspect-video"
+                  className="w-full object-cover transition-transform duration-200 aspect-video"
                   src={video?.thumbnailUrl}
                   alt={video?.title || 'Video thumbnail'}
                 />
@@ -57,7 +58,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
                 )}
               </div>
 
-              <div className="mt-3 flex gap-3">
+              <div className="mt-3 flex gap-2">
                 
                 <div 
                   className="flex-shrink-0"
@@ -88,12 +89,12 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
                 </div>
 
                 <div className="flex-1 min-w-0 leading-tight">
-                  <h3 className="">
+                  <h3 className=" font-medium md:text-base text-[1.6rem] text-gray-900">
                     {video?.title || 'Untitled'}
                   </h3>
                   
                   <p 
-                    className="text-gray-600 text-xs md:text-sm mt-1 hover:text-gray-900 transition-colors cursor-pointer"
+                    className="text-gray-600 text-xs md:text-sm hover:text-gray-900 transition-colors cursor-pointer"
                     onClick={(event) => {
                       event.stopPropagation();
                       navigate(`/api/channel/${video.channel}`);
@@ -107,6 +108,10 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
                     <span className='text-gray-600'>•</span>
                     <TimeAgo timestamp={video.publishedAt} />
                   </p>
+                </div>
+
+                <div className=''>
+                    <BsThreeDotsVertical fontSize={20} className='mt-[2px]'/>
                 </div>
               </div>
             </div>

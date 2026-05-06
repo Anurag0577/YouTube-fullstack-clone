@@ -39,22 +39,32 @@ function Homepage() {
             ${isSidebarOpen ? 'w-fit' : 'w-20'}`}
         >
             <div className="flex flex-col h-full">
-                <ul className="flex-1 space-y-2 p-3">
-                    <li className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group">
-                        <AiOutlineHome className="text-2xl shrink-0" />
-                        <span className={`ml-4 font-medium transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}>
+                <ul className="flex-1 flex flex-col space-y-2 p-3 gap-y-5 pl-6">
+                    <li className={ `flex ${!isSidebarOpen && 'justify-center'}  items-center rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group` }>
+                        <div className="flex flex-col gap-y-1 justify-center items-center">
+                            <AiOutlineHome className="text-2xl shrink-0" />
+                            <p className={`text-[10px] ${isSidebarOpen && 'hidden'}`} >Home</p>
+                        </div>
+                        
+                        <span className={`ml-4  transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}>
                             Home
                         </span>
                     </li>
-                    <li className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group">
-                        <FiTrendingUp className="text-2xl shrink-0" />
-                        <span className={`ml-4 font-medium transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}>
+                    <li className={ `flex ${!isSidebarOpen && 'justify-center'}  items-center rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group` }>
+                        <div className="flex flex-col gap-y-1 justify-center items-center">
+                            <FiTrendingUp className="text-2xl shrink-0" />
+                            <p className={`text-[10px] ${isSidebarOpen && 'hidden'}`} >Trending</p>
+                        </div>
+                        <span className={`ml-4  transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}>
                             Trending
                         </span>
                     </li>
-                    <li className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group" onClick ={() => navigate('/subscription')}>
-                        <MdOutlineSubscriptions className="text-2xl shrink-0" />
-                        <span className={`ml-4 font-medium transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}  >
+                    <li className={ `flex ${!isSidebarOpen && 'justify-center'}  items-center rounded-xl hover:bg-gray-100 cursor-pointer transition-colors group` } onClick ={() => navigate('/subscription')}>
+                        <div className="flex flex-col gap-y-1 justify-center items-center">
+                            <MdOutlineSubscriptions className="text-2xl shrink-0" />
+                            <p className={`text-[10px] ${isSidebarOpen && 'hidden'}`} >Subscriptions</p>
+                        </div>
+                        <span className={`ml-4  transition-opacity duration-300 ${!isSidebarOpen && 'hidden'}`}  >
                             Subscriptions
                         </span>
                     </li>

@@ -15,6 +15,7 @@ import { fetchUserDetails } from '../slice/authSlice.js';
 import { FaBars } from 'react-icons/fa6';
 import { showSidebar, hideSidebar } from '../slice/sidebarHandler.js';
 import {jwtDecode} from 'jwt-decode';
+import { IoSearch } from "react-icons/io5";
 import api from '../api/axios.js';
 
 function Header() {
@@ -138,16 +139,29 @@ function Header() {
     <div className="headerContainer fixed top-0 left-0 w-full h-16 bg-white text-black flex items-center justify-between px-4 py-2 z-20">
       {/* Left side - Logo */}
       <div className="flex items-center">
-      <div className="text-xl mr-1 cursor-pointer" onClick={handleSidebar}>
-             <FaBars  />
-      </div>
+        <div className="text-xl mr-1 cursor-pointer px-4 py-3" onClick={handleSidebar}>
+              <FaBars  />
+        </div>
        
         <img
-          className="h-6 m-1 cursor-pointer"
+          className="h-6 m-1 ml-5 cursor-pointer"
           src={YouTubeLogo}
           alt="YouTube Logo"
           onClick={() => navigate('/')}
         />
+      </div>
+
+      <div className="flex flex-row justify-center items-center basis-[732px] grow-0 shrink min-w-0">
+        <div class="flex-1 flex relative ml-10 px-1 pr-0 h-10 white border-1 border-gray-400 rounded-full max-w-2xl">
+          <input
+            type="text"
+            class="flex-1 rounded-l-full px-4 py-2 focus:outline-none text-sm"
+            placeholder="Search"
+          />
+          <button class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-4 py-2 rounded-r-full">
+            <IoSearch fontSize={25} />
+          </button>
+        </div>
       </div>
 
       {/* Right side - User actions */}
