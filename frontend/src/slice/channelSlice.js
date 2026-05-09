@@ -8,10 +8,9 @@ const fetchChannelInfo = createAsyncThunk(
     async (thunkAPI) => {
         try {
             const userDetails = JSON.parse(localStorage.getItem('user'))
-            const channelId = userDetails.channel;
+            const channelId = userDetails.channel._id;
             // fetching the channel info from the DB
             const channelInfo = await api.get(`/channel/${channelId}`);
-            console.log("0000000000000000000000000",channelInfo.data)
             return channelInfo?.data?.data; // retruning channel details object
         } catch (err) {
             console.log('Getting error while fetching channel info:', err)            

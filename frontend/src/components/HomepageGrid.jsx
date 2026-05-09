@@ -41,7 +41,7 @@ function HomepageGrid({ videos = [], currentUserAvatar = null }) {
           return (
             <div 
               key={video._id}
-              className="video-card group cursor-pointer"
+              className="video-card group cursor-pointer hover:bg-gray-200 rounded-xl p-3 transition"
               // add onClick on div not on the image
               onClick={() => videoClickHandler(video)}
             >

@@ -39,38 +39,38 @@ function Dashboard() {
   const [doesUserHaveChannel, setDoesUserHaveChannel] = useState(null);
 
   // 3. Fetch User and Channel Logic
+  const initializeDashboard = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    
+    if (!accessToken) {
+      console.error('No access token found');
+      return; 
+    }
+
+    try {
+      const decodedToken = jwtDecode(accessToken);
+      const userID = decodedToken._id;
+
+      // Fetch user to get their channel ID
+      const res = await axios.get(`http://localhost:3000/api/users/${userID}`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const activeChannelID = res.data.data.channel;
+
+      if (!activeChannelID) {
+        setDoesUserHaveChannel(false);
+      } else {
+        setDoesUserHaveChannel(true);
+        // DISPATCH: Now we definitely have the ID
+        dispatch(fetchChannelInfo(activeChannelID));
+      }
+    } catch (err) {
+      console.error('Dashboard Init Error:', err);
+    }
+  };
+
   useEffect(() => {
-    const initializeDashboard = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      
-      if (!accessToken) {
-        console.error('No access token found');
-        return; 
-      }
-
-      try {
-        const decodedToken = jwtDecode(accessToken);
-        const userID = decodedToken._id;
-
-        // Fetch user to get their channel ID
-        const res = await axios.get(`http://localhost:3000/api/users/${userID}`, {
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        const activeChannelID = res.data.data.channel;
-
-        if (!activeChannelID) {
-          setDoesUserHaveChannel(false);
-        } else {
-          setDoesUserHaveChannel(true);
-          // DISPATCH: Now we definitely have the ID
-          dispatch(fetchChannelInfo(activeChannelID));
-        }
-      } catch (err) {
-        console.error('Dashboard Init Error:', err);
-      }
-    };
-
     initializeDashboard();
   }, [dispatch]);
 
@@ -113,7 +113,7 @@ function Dashboard() {
       {!doesUserHaveChannel ? (
         <div className="flex flex-col w-full h-screen">
           <Headers />
-          <div className="flex flex-col text-center justify-center w-full h-full mt-16 ">
+          <div className="flex flex-col text-center justify-center items-center w-full h-full mt-16 ">
             <h1 className="text-2xl">You don't have a channel yet.</h1>
             <p className="text-[12px] mb-5">Create a channel to start managing your content.</p>
             <button 
@@ -163,7 +163,7 @@ function Dashboard() {
                   <h1 className="text-2xl mb-5 font-bold">Channel Content</h1>
                   <div className="w-full flex flex-col gap-3">
                     {videos.map(video => (
-                      <div key={video._id} className="w-full flex justify-between items-center p-2 rounded-lg border border-gray-200 hover:border-black transition">
+                      <div key={video._id} className="w-full flex justify-between items-center p-1 rounded-lg border-2 border-gray-200 hover:bg-gray-100 hover:border-gray-400 transition">
                         <div className="flex items-center gap-5">
                           <img className="h-[60px] aspect-video rounded object-cover" src={video.thumbnailUrl} alt={video.title} />
                           <h1 className="font-medium">{video.title}</h1>
@@ -192,7 +192,7 @@ function Dashboard() {
       {/* Popups */}
       {isCreatePopOpen && (
         <PopupWrapper close={() => setIsCreatePopOpen(false)}>
-          <CreateChannel />
+          <CreateChannel setIsCreatePopOpen={setIsCreatePopOpen} onChannelCreated={initializeDashboard} />
         </PopupWrapper>
       )}
 

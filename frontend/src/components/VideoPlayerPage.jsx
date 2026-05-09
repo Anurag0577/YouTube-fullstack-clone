@@ -164,7 +164,7 @@ function VideoPlayerPage() {
     const accessToken = localStorage.getItem('accessToken');
     if(accessToken){
         const userId = jwtDecode(accessToken)._id;
-          console.log(jwtDecode(accessToken))
+          console.log(jwtDecode(accessToken));
           
             const fetchedUser = async() => {
               try {
@@ -190,18 +190,17 @@ function VideoPlayerPage() {
                 } else{
                   setIsDisliked(false)
                 }
-              
-            
-          } catch (err) {
-            
+          } 
+          catch (err) {
+            console.error('Error fetching user details:', err);
           }}
         fetchedUser();
     }
     
     
-  }, [])
+  }, []);
 
-  // LIKE A VIDEO
+  // LIKE A VIDEO 
   const likeHandler = async() => {
     const isUserLogin = localStorage.getItem('accessToken');
     if(!isUserLogin){
@@ -332,14 +331,14 @@ function VideoPlayerPage() {
               <h1 className="text-2xl font-bold tracking-tight leading-tight mb-1">
                 {videoDetail.title || 'Untitled Video'}
               </h1>
-              <div className="engagements flex justify-between items-center mr-10 ">
+              <div className="engagements flex justify-between items-center mr-10 mt-2">
                 <div className="left-side flex gap-x-6 items-center">
                   <div className="chennel-name-picture flex gap-2 items-center ">
                     <div className="w-10 h-10 md:w-10 md:h-10 cursor-pointer rounded-full overflow-hidden border-2 border-transparent hover:border-gray-300 transition-colors">
                       <img className="channel-profile-picture" src={channelDetail.avatar}></img>
                     </div>
                     <div>
-                      <h1 className="channel-title text-xl font-semibold ">{channelDetail.channelName}</h1>
+                      <h1 className="channel-title text-sm font-semibold ">{channelDetail.channelName}</h1>
                       <p className="text-xs text-gray-700">{channelDetail.subscriberCount} Subscribers</p>
                     </div>
                     
@@ -351,9 +350,9 @@ function VideoPlayerPage() {
                   <div className="channel-engagement"><span className="py-2 px-4 rounded-l-full bg-gray-100 flex items-center gap-x-1 font-semibold hover:bg-gray-300 cursor-pointer {()} " onClick={likeHandler}>
                     {
                       (isLiked)? 
-                          <AiFillLike className="text-2xl"/>
+                          <AiFillLike className="text-xl"/>
                        : 
-                          <AiOutlineLike className="text-2xl"/>
+                          <AiOutlineLike className="text-xl"/>
                     }
                     
                     
@@ -365,7 +364,7 @@ function VideoPlayerPage() {
                       className="py-2 px-4 rounded-r-full flex items-center gap-x-1 border-l-2 border-gray-400 bg-gray-100 cursor-pointer font-semibold hover:bg-gray-300 transition-colors" 
                       onClick={dislikeHandler}
                     >
-                      {isDisliked? <AiFillDislike className="text-2xl" /> : <AiOutlineDislike className="text-2xl" />}
+                      {isDisliked? <AiFillDislike className="text-xl" /> : <AiOutlineDislike className="text-xl" />}
                       
                       {dislikes || 0}
                     </span> 
@@ -374,7 +373,7 @@ function VideoPlayerPage() {
                 </div>
               </div>
               <div className="bg-gray-100 rounded-2xl p-5">
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-black leading-relaxed text-sm" style={{ whiteSpace: 'pre-wrap' }}>
                       {videoDetail.description || 'No description available'}
                   </p>
               </div>

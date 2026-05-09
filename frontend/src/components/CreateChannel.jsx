@@ -4,11 +4,11 @@ import axios from 'axios';
 // import '../assets/coverMock.png';
 import api from '../api/axios';
 
-function CreateChannel() {
+function CreateChannel({setIsCreatePopOpen, onChannelCreated}) {
     // useState to remember values b/w renders..
     const [name, setName] = useState('')
-    const [coverUrl, setCoverUrl] = useState('');
-    const [channelAvatar, setChannelAvatar] = useState('')
+    const [coverUrl, setCoverUrl] = useState('https://res.cloudinary.com/dywh2ogcw/image/upload/v1778140690/Clear_PNG_Transparent_With_Clear_Background_ID_99164___TopPNG_kmlbkr.jpg');
+    const [channelAvatar, setChannelAvatar] = useState('https://res.cloudinary.com/dywh2ogcw/image/upload/v1778138538/profilePicture_f2npml.jpg')
     const [description, setDescription] = useState('')
     const [coverFile, setCoverFile] = useState(null)
     const [avatarFile, setAvatarFile] = useState(null)
@@ -63,9 +63,23 @@ function CreateChannel() {
                 avatar: channelAvatar,
                 cover: coverUrl
             })
+
+            setIsCreatePopOpen(false);
+
+            console.log( "Created Channel Data right now: " ,res.data.data);
+            localStorage.setItem('user', JSON.stringify({
+              ...JSON.parse(localStorage.getItem('user')),
+              channel: res.data.data
+            }))
+
             console.log(res.data.data);
 
             console.log('Channel Create successfully', res.data.data)
+            
+            // Re-check user's channel status to update the dashboard
+            if (onChannelCreated) {
+                onChannelCreated();
+            }
         } catch(err){
             console.log(err)
         }
@@ -91,16 +105,16 @@ function CreateChannel() {
 
   {/* Scrollable body */}
   <div className="flex-1 overflow-y-auto px-5 pb-10">
-    <div className="form-wrapper mt-5 w-full lg:w-1/2 mx-auto">
+    <div className="form-wrapper mt-5 w-full lg:w-full mx-auto">
       
       {/* Banner Image */}
       <div className="banner-image mb-5">
-        <h3 className="text-xl">Banner image</h3>
-        <p className="text-[13px] text-gray-600">
+        <h3 className="text-xl leading-tight">Banner image</h3>
+        <p className="text-[12px] text-gray-500 mb-7">
           This image will appear across the top of your channel.
         </p>
         <div className="mt-4 flex flex-col sm:flex-row gap-5">
-          <img src={coverUrl} alt="banner_img" className="w-full sm:w-60 object-cover rounded-md" />
+          <img src={coverUrl}  className=" object-cover aspect-video h-20 border-2 border-dashed border-gray-400 p-[1px] rounded-sm " />
           <div className="flex flex-col">
             <p className="text-[13px] text-gray-600">
               For best results use 2048x1152px &lt; 6MB.
@@ -120,7 +134,7 @@ function CreateChannel() {
           Your profile picture will appear where your channel is presented.
         </p>
         <div className="mt-4 flex flex-col sm:flex-row gap-5">
-          <img src={channelAvatar} alt="avatar" className="w-32 h-32 sm:w-40 sm:h-40 aspect-square rounded-full border border-gray-200" />
+          <img src={channelAvatar} alt="avatar" className="sm:w-20 sm:h-20 aspect-square rounded-full border-2 border-gray-500 h-20 w-20 p-[2px]" />
           <div>
             <p className="text-[13px] text-gray-600">
               Recommended: 98x98px, under 4MB (PNG/GIF).

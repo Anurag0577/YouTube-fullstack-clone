@@ -69,19 +69,15 @@ function Customisation({isSidebarOpen, channelDetail}) {
         }
     }
 
-    // upload cover image using coverUploader
-    // upload avatar using avatar uploader
-    // when save/publish button press -> update the channel details using put api
-
     return(
         <>
         <div className={`channel-customisation-container flex-1' ${isSidebarOpen ? 'ml-[200px]' : 'ml-[100px]'} min-h-screen transition-all w-full duration-300 mr-10 mb-10`} >
             <div className='flex justify-between items-center border-b border-gray-200 pb-3'>
                 <h1 className="main-heading text-2xl font-medium">Channel customisation</h1>
-                <button className='px-4 py-2 mt-5 bg-gray-100 rounded-2xl hover:bg-gray-200 cursor-pointer' onClick={updateChannelDetail}>Publish</button>
+                <button className='px-4 py-2 mt-5 bg-gray-100 rounded-2xl hover:bg-black cursor-pointer' onClick={updateChannelDetail}>Publish</button>
             </div>
             
-            <div className="form-wrapper mt-5 lg:w-[50%]">
+            <div className="form-wrapper mt-5 lg:w-full w-[90%]">
                 <div className="banner-image mb-5">
                     <h3 className="text-xl ">Banner image</h3>
                     <p className="text-[13px] text-gray-600">This image will appear across the top of your channel.</p>
