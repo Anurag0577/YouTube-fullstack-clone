@@ -5,15 +5,20 @@ import api from "../api/axios";
 const fetchChannelInfo = createAsyncThunk(
     'ChannelInfo', // Action Type Prefix - Think of it as a Tracking Number for a package. Redux needs a unique ID to know exactly which process is happening across the entire application
 
-    async (thunkAPI) => {
+    async (channelId, thunkAPI) => {
         try {
             const userDetails = JSON.parse(localStorage.getItem('user'))
-            const channelId = userDetails.channel._id;
+            const channelTargetId = channelId || userDetails?.channel || userDetails?.channel?._id;
+            if (!channelTargetId) {
+                throw new Error('Channel ID is required');
+            }
+
+            console.log('0000000000000-------------', channelTargetId)
             // fetching the channel info from the DB
-            const channelInfo = await api.get(`/channel/${channelId}`);
+            const channelInfo = await api.get(`/channel/${channelTargetId}`);
             return channelInfo?.data?.data; // retruning channel details object
         } catch (err) {
-            console.log('Getting error while fetching channel info:', err)            
+            console.log('Getting error while fetching channel info:', err)
             return thunkAPI.rejectWithValue(err);
         }
     }

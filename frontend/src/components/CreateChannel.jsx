@@ -23,7 +23,7 @@ function CreateChannel({setIsCreatePopOpen, onChannelCreated}) {
             formData.append('image', selectedFile);
             try{
                 const res = await api.post('/upload/image/single', formData)
-                console.log(res.data.data.url);
+                console.log('this is new cover url: ', res.data.data.url);
                 setCoverUrl(res.data.data.url)
 
             } catch(err){

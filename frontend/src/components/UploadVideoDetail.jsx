@@ -72,7 +72,7 @@ function UploadVideoDetail({file}){
             console.log('Video details saved:', res.data);
             dispatch(hide());
             console.log('Before dispatch(fetchChannelInfo())' )
-            dispatch(fetchChannelInfo(uploadVideoDetail?.data))
+            dispatch(fetchChannelInfo())
             
             console.log('After dispatch(fetchChannelInfo())')
             } catch (err) {

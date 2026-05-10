@@ -20,6 +20,9 @@ import { fetchChannelInfo } from '../slice/channelSlice.js';
 
 function Dashboard() {
   const dispatch = useDispatch();
+
+  // local hooks
+  const [loading, setLoading] = useState(true);
   
   // 1. Redux State Selection
   // Ensure 'fetchChannelInfo' matches the key in your store.js reducer object
@@ -37,13 +40,16 @@ function Dashboard() {
   const [componentShow, setComponentShow] = useState('Content');
   const [isCreatePopOpen, setIsCreatePopOpen] = useState(false);
   const [doesUserHaveChannel, setDoesUserHaveChannel] = useState(null);
+  const [channelId, setChannelId] = useState(null);
 
   // 3. Fetch User and Channel Logic
   const initializeDashboard = async () => {
+    setLoading(true);
     const accessToken = localStorage.getItem('accessToken');
     
     if (!accessToken) {
       console.error('No access token found');
+      setLoading(false);
       return; 
     }
 
@@ -62,11 +68,14 @@ function Dashboard() {
         setDoesUserHaveChannel(false);
       } else {
         setDoesUserHaveChannel(true);
+        setChannelId(activeChannelID);
         // DISPATCH: Now we definitely have the ID
-        dispatch(fetchChannelInfo(activeChannelID));
+        await dispatch(fetchChannelInfo(activeChannelID));
       }
     } catch (err) {
       console.error('Dashboard Init Error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,8 +103,8 @@ function Dashboard() {
         });
 
         // Refresh Redux store after deletion
-        if (channelDetail?._id) {
-          dispatch(fetchChannelInfo(channelDetail._id));
+        if (channelId) {
+          dispatch(fetchChannelInfo(channelId));
         }
       } catch (error) {
         console.error('Delete error:', error.response?.data?.message || error.message);
@@ -103,8 +112,18 @@ function Dashboard() {
     }
   };
 
+  const refreshChannelInfo = async () => {
+    if (!channelId) return;
+    setLoading(true);
+    try {
+      await dispatch(fetchChannelInfo(channelId));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 5. Render Logic
-  if (doesUserHaveChannel === null && channelState.loading) {
+  if (loading || channelState.loading) {
     return <div className="h-screen w-full flex items-center justify-center">Loading Dashboard...</div>;
   }
 
@@ -159,26 +178,35 @@ function Dashboard() {
             {/* Main Content Area */}
             <div className={`flex-1 ${isSidebarOpen ? 'ml-[200px]' : 'ml-[80px]'} p-8 transition-all duration-300`}>
               {componentShow === 'Content' && (
-                <div>
+                <div className="w-full h-full ">
                   <h1 className="text-2xl mb-5 font-bold">Channel Content</h1>
-                  <div className="w-full flex flex-col gap-3">
-                    {videos.map(video => (
-                      <div key={video._id} className="w-full flex justify-between items-center p-1 rounded-lg border-2 border-gray-200 hover:bg-gray-100 hover:border-gray-400 transition">
-                        <div className="flex items-center gap-5">
-                          <img className="h-[60px] aspect-video rounded object-cover" src={video.thumbnailUrl} alt={video.title} />
-                          <h1 className="font-medium">{video.title}</h1>
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoEditHandler(video)}>
-                            <AiOutlineEdit className="text-xl" />
-                          </button>
-                          <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoDeleteHandler(video._id)}>
-                            <AiOutlineDelete className="text-xl" />
-                          </button>
-                        </div>
+                  {
+                    videos.length < 1 ? (
+                      <div className="h-full w-full flex flex-col justify-center items-center">
+                        <h2 className="text-center font-bold text-2xl ">
+                          Your channel do not have any video yet!
+                        </h2>
+                        <p>Post a new video by clicking on the '+ create' button in the header.</p>
                       </div>
-                    ))}
-                  </div>
+                    ) : <div className="w-full flex flex-col gap-3">
+                          {videos.map(video => (
+                            <div key={video._id} className="w-full flex justify-between items-center p-1 rounded-lg border-2 border-gray-200 hover:bg-gray-100 hover:border-gray-400 transition">
+                              <div className="flex items-center gap-5">
+                                <img className="h-[60px] aspect-video rounded object-cover" src={video.thumbnailUrl} alt={video.title} />
+                                <h1 className="font-medium">{video.title}</h1>
+                              </div>
+                              <div className="flex gap-2">
+                                <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoEditHandler(video)}>
+                                  <AiOutlineEdit className="text-xl" />
+                                </button>
+                                <button className="p-2 hover:bg-black hover:text-white rounded" onClick={() => videoDeleteHandler(video._id)}>
+                                  <AiOutlineDelete className="text-xl" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                  }
                 </div>
               )}
 
@@ -204,7 +232,11 @@ function Dashboard() {
 
       {isEditPopOpen && (
         <PopupWrapper close={() => setIsEditPopOpen(false)} title="Update Video Details">
-          <EditPopup videoId={videoId} />
+          <EditPopup
+            videoId={videoId}
+            onUpdate={refreshChannelInfo}
+            closePopup={() => setIsEditPopOpen(false)}
+          />
         </PopupWrapper>
       )}
     </>

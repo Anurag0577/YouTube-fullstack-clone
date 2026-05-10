@@ -47,7 +47,7 @@ if (isCloudinaryConfigured) {
         cloudinary: cloudinary,
         params: {
             folder: 'images',
-            allowed_formats: ['jpeg', 'png', 'jpg'], 
+            allowed_formats: ['jpeg', 'png', 'jpg', 'gif'], 
             resource_type: 'image'
         }
     });
@@ -78,7 +78,7 @@ if (isCloudinaryConfigured) {
             if (isImage) {
                 return {
                     folder: 'images',
-                    allowed_formats: ['jpeg', 'png', 'jpg'],
+                    allowed_formats: ['jpeg', 'png', 'jpg', 'gif'],
                     resource_type: 'image'
                 };
             }

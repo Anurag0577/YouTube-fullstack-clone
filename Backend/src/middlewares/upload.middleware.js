@@ -17,7 +17,7 @@ const cloudEnabled = typeof isCloudinaryConfigured === 'function'
 // Filters
 const imageFileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-  if (!allowedTypes.includes(file.mimetype)) {
+  if (!allowedTypes.includes(file.mimetype.toLowerCase())) {
     cb(new apiError(400, 'File type not supported. Please upload JPEG, JPG, PNG, or GIF files.'), false);
   } else {
     cb(null, true);

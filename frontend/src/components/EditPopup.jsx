@@ -3,24 +3,27 @@ import { useState } from "react"
 import { AiOutlineEdit } from 'react-icons/ai';
 import api from "../api/axios";
 
-function EditPopup({videoId}){
+function EditPopup({ videoId, onUpdate, closePopup }) {
     console.log(videoId)
     const [videoTitle, setVideoTitle] = useState(videoId.title);
     const [videoDescription, setVideoDescription] = useState(videoId.description)
     const [videoThumbnail, setVideoThumbnail] = useState(videoId.thumbnailUrl)
 
-    const updateVideoDetailHandler = async() => {
-        try
-        {const res = await api.put(`/videos/${videoId._id}`, {
-            title: videoTitle,
-            description: videoDescription,
-            thumbnailUrl: videoThumbnail
-        })
-            console.log(res?.data?.data)}
-        catch(err){
+    const updateVideoDetailHandler = async () => {
+        try {
+            const res = await api.put(`/videos/${videoId._id}`, {
+                title: videoTitle,
+                description: videoDescription,
+                thumbnailUrl: videoThumbnail
+            });
+
+            if (res?.data?.data) {
+                onUpdate?.();
+                closePopup?.();
+            }
+        } catch (err) {
             console.error("Error updating video: " , err.response?.data || err.message)
         }
-            const updateVideoDetail = res?.data?.data;
     }
     return(
         <>
